@@ -1,0 +1,10 @@
+commonEnvVars:
+  STAGE: ${opt:stage, "dev"}
+  auditEventStreamName: ${file(${self:custom.envFilePath}):audit.kinesis.auditEventDeliveryStream}-${self:provider.stage}
+  isAuditEnabled: ${file(${self:custom.envFilePath}):isAuditEnabled}
+  DB_HOST: ${file(${self:custom.envFilePath}):database.host}
+  DB_PORT: ${file(${self:custom.envFilePath}):database.port}
+  DB_NAME: ${file(${self:custom.envFilePath}):database.database}
+  DB_SECRET_ARN: ${file(${self:custom.envFilePath}):database.secretArn}
+  COGNITO_USER_POOL_ID: ${file(${self:custom.envFilePath}):userPool.id}
+  COGNITO_CLIENT_ID: ${file(${self:custom.envFilePath}):userPool.clientId}

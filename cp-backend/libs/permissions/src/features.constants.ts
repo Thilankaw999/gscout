@@ -1,0 +1,48 @@
+/**
+ * Author: Roshan Piumal (roshan.piumal@mitrai.com)
+ * Created on: 21/09/2024
+ * Description: Features Constants
+ * Module: LiSLS Boilerplate
+ * Copyright (c) 2024 MitraAi All rights reserved.
+ */
+
+export enum RESOURCES {
+  USER = 'USER',
+  ACCOUNT = 'ACCOUNT',
+  INVOICE = 'INVOICE',
+  PAYMENT = 'PAYMENT',
+  CLIENT = 'CLIENT',
+  FAQ = 'FAQ',
+  FEEDBACK_FORM_META = 'FEEDBACK_FORM_META',
+  ITSM = 'ITSM', //IT Service Management
+  POLICIES = 'POLICIES', // Insurance Policies
+  CLAIMS = 'CLAIMS', // Insurance Claims
+  DOCUMENTS = 'DOCUMENTS', // Document Management
+  CHATBOT = 'CHATBOT', // Chatbot Interactions
+}
+
+export enum ACTIONS {
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  PATCH = 'PATCH',
+  DELETE = 'DELETE',
+  SEARCH = 'SEARCH',
+  GET = 'GET',
+  CREATE_INVITE = 'CREATE_INVITE',
+  DELETE_INVITE = 'DELETE_INVITE',
+  DELETE_USER = 'DELETE_USER',
+  CHANGE_ROLE = 'CHANGE_ROLE',
+  GET_ROLES = 'GET_ROLES',
+  GET_USERS = 'GET_USERS',
+  VERIFY_CONTACT = 'VERIFY_CONTACT',
+  FEATURED_ARTICLES = 'FEATURED_ARTICLES',
+  INVITE = 'INVITE',
+  ALL = 'ALL',
+  DELETE_BANK_ACCOUNT = 'DELETE_BANK_ACCOUNT',
+  GENERATE_ATTACHMENT_UPLOAD_URL = 'GENERATE_ATTACHMENT_UPLOAD_URL',
+  CREATE_GENERAL_SERVICE_TICKET = 'CREATE_GENERAL_SERVICE_TICKET',
+  CREATE_NEW_BANK_ABN_CHANGED_REQUEST = 'CREATE_NEW_BANK_ABN_CHANGED_SERVICE_TICKET',
+}
+export const CHECK_FEATURES_KEY = 'check_features';
+
+export const ROLE_ATTRIBUTE = 'cognito:groups';

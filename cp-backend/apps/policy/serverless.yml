@@ -1,0 +1,93 @@
+service: pcpApi-policy
+frameworkVersion: '4.x.x'
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  memorySize: 1800
+  versionFunctions: false
+  stage: ${opt:stage, "dev"}
+  region: 'ap-south-1'
+  endpointType: ${file(${self:custom.envFilePath}):apiGatewayEndpointType}
+  deploymentBucket:
+    name: pcp-api-deployments-${self:provider.stage}
+  environment: ${file(../../shared/commonEnvVars.yml):commonEnvVars}
+  # vpc:
+  #   securityGroupIds: ${file(${self:custom.envFilePath}):vpc.lambdaSecurityGroupIds}
+  #   subnetIds: ${file(${self:custom.envFilePath}):vpc.subnetIds}
+  iam:
+    role:
+      statements:
+        - ${file(../../shared/commonIAMRoleStatements.yml):firehosePutRecord}
+        - ${file(../../shared/commonIAMRoleStatements.yml):rdsAccess}
+        - ${file(../../shared/commonIAMRoleStatements.yml):secretsManager}
+        - ${file(../../shared/commonIAMRoleStatements.yml):s3Access}
+
+custom:
+  envFilePath: '../../environment/env.json'
+  customDomain:
+    basePath: policy
+    domainName: ${file(${self:custom.envFilePath}):apiDomain}
+    certificateName: ${file(${self:custom.envFilePath}):sslCertificateName}
+    stage: ${self:provider.stage}
+  serverless-offline:
+    httpPort: 3002
+    lambdaPort: 4002
+    noPrependStageInUrl: true
+    noTimeout: true
+    verbose: true
+    prefix: 'policy'
+  cognitoUserPoolArn: ${cf:pcp-${self:provider.stage}-infrastructure-stack.PCPApiUserPoolArn${self:provider.stage}}
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./.dist/**
+
+plugins:
+  - serverless-offline
+  - serverless-domain-manager
+
+functions:
+  policyApi:
+    handler: .dist/main.handler
+    events:
+      - http:
+          method: GET
+          path: /policies
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          authorizer:
+            arn: ${self:custom.cognitoUserPoolArn}
+      - http:
+          method: GET
+          path: /claims
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          authorizer:
+            arn: ${self:custom.cognitoUserPoolArn}
+      - http:
+          method: GET
+          path: /documents
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          authorizer:
+            arn: ${self:custom.cognitoUserPoolArn}
+      - http:
+          method: GET
+          path: /documents/{documentId}/download
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          authorizer:
+            arn: ${self:custom.cognitoUserPoolArn}
+      - http:
+          method: GET
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          path: /docs/swagger.json 

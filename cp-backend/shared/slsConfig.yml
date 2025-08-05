@@ -1,0 +1,15 @@
+allowedCorsHeaders:
+  - Content-Type
+  - Authorization
+  - Context
+  - traceparent
+  - X-Amz-Date
+  - X-Api-Key
+  - X-Amz-Security-Token
+  - X-Amz-User-Agent
+  - X-Amzn-Trace-Id
+  - Account-Key
+  - App-Version
+  - Expires
+  - Cache-Control
+  - Pragma

@@ -1,0 +1,164 @@
+{
+  "USER": {
+    "GET_ACCOUNTS": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "INVITE": {
+      "ROLES": ["ADMIN"]
+    },
+    "UPDATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "PATCH": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "VERIFY_CONTACT": {
+      "ROLES": ["ADMIN", "USER"]
+    }
+  },
+  "INVOICE": {
+    "CREATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "UPDATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "SEARCH": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    }
+  },
+  "PAYMENT": {
+    "SEARCH": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    }
+  },
+  "CLIENT": {
+    "CREATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "UPDATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "ALL": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    }
+  },
+  "ACCOUNT": {
+    "CREATE_INVITE": {
+      "ROLES": ["ADMIN"]
+    },
+    "DELETE_INVITE": {
+      "ROLES": ["ADMIN"]
+    },
+    "DELETE_USER": {
+      "ROLES": ["ADMIN"]
+    },
+    "CHANGE_ROLE": {
+      "ROLES": ["ADMIN"]
+    },
+    "GET_ROLES": {
+      "ROLES": ["ADMIN"]
+    },
+    "GET_USERS": {
+      "ROLES": ["ADMIN"]
+    },
+    "PATCH": {
+      "ROLES": ["ADMIN"]
+    },
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "CREATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "FEATURED_ARTICLES": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "DELETE_BANK_ACCOUNT": {
+      "ROLES": ["ADMIN"]
+    }
+  },
+  "FAQ": {
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    }
+  },
+  "FEEDBACK_FORM_META": {
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    }
+  },
+  "ITSM":{
+    "CREATE_NEW_BANK_ABN_CHANGED_SERVICE_TICKET": {
+      "ROLES": ["ADMIN"]
+    },
+    "GENERATE_ATTACHMENT_UPLOAD_URL": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "CREATE_GENERAL_SERVICE_TICKET": {
+     "ROLES": ["ADMIN", "USER"]
+    }
+  },
+  "POLICIES": {
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "CREATE": {
+      "ROLES": ["ADMIN"]
+    },
+    "UPDATE": {
+      "ROLES": ["ADMIN"]
+    },
+    "DELETE": {
+      "ROLES": ["ADMIN"]
+    }
+  },
+  "CLAIMS": {
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "CREATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "UPDATE": {
+      "ROLES": ["ADMIN"]
+    },
+    "DELETE": {
+      "ROLES": ["ADMIN"]
+    }
+  },
+  "DOCUMENTS": {
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "CREATE": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "UPDATE": {
+      "ROLES": ["ADMIN"]
+    },
+    "DELETE": {
+      "ROLES": ["ADMIN"]
+    }
+  },
+  "CHATBOT": {
+    "GET": {
+      "ROLES": ["ADMIN", "USER"]
+    },
+    "CREATE": {
+      "ROLES": ["ADMIN", "USER"]
+    }
+  }
+}

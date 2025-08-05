@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "esModuleInterop": true,
+    "paths": {
+      "@app/permissions": ["libs/permissions/src"],
+      "@app/permissions/*": ["libs/permissions/src/*"],
+      "@app/common": ["libs/common/src"],
+      "@app/common/*": ["libs/common/src/*"],
+      "@app/logger": ["libs/logger/src"],
+      "@app/logger/*": ["libs/logger/src/*"],
+      "@app/aws": ["libs/aws/src"],
+      "@app/aws/*": ["libs/aws/src/*"],
+      "@app/db": ["libs/db/src"],
+      "@app/db/*": ["libs/db/src/*"],
+      "@app/domain": ["libs/domain/src"],
+      "@app/domain/*": ["libs/domain/src/*"],
+      "@app/user-context": ["libs/user-context/src"],
+      "@app/user-context/*": ["libs/user-context/src/*"],
+      "@app/integrations": ["libs/integrations/src"],
+      "@app/integrations/*": ["libs/integrations/src/*"],
+      "@environment/*": ["environment/*"]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+firehosePutRecord:
+  Effect: 'Allow'
+  Action:
+    - 'firehose:PutRecord'
+    - 'firehose:PutRecordBatch'
+  Resource:
+    - 'arn:aws:firehose:${self:provider.region}:${aws:accountId}:deliverystream/${file(${self:custom.envFilePath}):audit.kinesis.auditEventDeliveryStream}-${self:provider.stage}'
+
+
+
+dynamoDb:
+  Effect: Allow
+  Action:
+    - dynamodb:PutItem
+    - dynamodb:GetItem
+    - dynamodb:DeleteItem
+  Resource: 
+    - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${file(${self:custom.envFilePath}):dynamodb.otp}-${self:provider.stage}
+
+rdsAccess:
+  Effect: Allow
+  Action:
+    - rds-db:connect
+  Resource: 
+    - arn:aws:rds-db:${self:provider.region}:${aws:accountId}:dbuser:pcp-api-db-${self:provider.stage}/*
+
+secretsManager:
+  Effect: Allow
+  Action:
+    - secretsmanager:GetSecretValue
+  Resource: 
+    - ${file(${self:custom.envFilePath}):database.secretArn}

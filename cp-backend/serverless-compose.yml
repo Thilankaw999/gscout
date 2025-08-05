@@ -1,0 +1,10 @@
+services:
+  # API Services
+  invoice:
+    path: apps/invoice
+  user:
+    path: apps/user
+    dependsOn: invoice
+  docs:
+    path: apps/docs
+    dependsOn: user
