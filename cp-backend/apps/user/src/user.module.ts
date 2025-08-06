@@ -8,16 +8,25 @@
 
 import { Module } from '@nestjs/common';
 import { UserApiController } from './user.controller';
-import { BaseAPIModule } from '@app/common';
+import { BaseAPIModule, CommonModule } from '@app/common';
 import { DbModule } from '@app/db';
+import { UserContextModule } from '@app/user-context';
+import { SecretsManagerModule } from '@app/aws';
 
 // Use Cases
 import { GetUserUseCase } from './queries/get-user/get-user.usecase';
-import { PatchUserUseCase } from './commands/patch-user/patch-user.usecase';
+
+// Services
+import { ItsSystemClientService } from './services/its-client.service';
+import { UserProfileTransformationService } from './services/user-profile-transformation.service';
 
 @Module({
-  imports: [BaseAPIModule, DbModule],
+  imports: [BaseAPIModule, CommonModule, DbModule, UserContextModule, SecretsManagerModule],
   controllers: [UserApiController],
-  providers: [GetUserUseCase, PatchUserUseCase],
+  providers: [
+    GetUserUseCase, 
+    ItsSystemClientService,
+    UserProfileTransformationService,
+  ],
 })
 export class UserApiModule {}

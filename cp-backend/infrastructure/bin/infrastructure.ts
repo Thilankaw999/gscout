@@ -11,6 +11,7 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { InfrastructureStack } from '../lib/infrastructure';
 import { DatabaseStack } from '../lib/database-stack';
+import { GirlScoutsOcrStack } from '../lib/girl-scouts-ocr-stack';
 
 const app = new cdk.App();
 
@@ -18,7 +19,7 @@ const app = new cdk.App();
 app.node.setContext('@aws-cdk/core:stackRelativeExports', true);
 
 // Get environment from context
-const projectName = app.node.tryGetContext('project-name') || 'pcp';
+const projectName = app.node.tryGetContext('project-name') || 'girl-scouts';
 const env = app.node.tryGetContext('env') || 'dev';
 const profile = app.node.tryGetContext('profile');
 
@@ -47,10 +48,18 @@ const infrastructureStack = new InfrastructureStack(app, `${projectName}-${env}-
   description: `${projectName} Application Infrastructure Stack - Stateless resources for ${env} environment`,
 });
 
-// Add explicit dependency to ensure database stack deploys first
+// 3. Deploy Girl Scouts OCR Stack (OCR processing resources)
+const ocrStack = new GirlScoutsOcrStack(app, `${projectName}-${env}-ocr-stack`, {
+  ...stackProps,
+  description: `${projectName} OCR Processing Stack - OCR and document processing resources for ${env} environment`,
+});
+
+// Add explicit dependencies
 infrastructureStack.addDependency(databaseStack);
+ocrStack.addDependency(infrastructureStack);
 
 // Output deployment order information
 console.log(`\n🗄️  Database Stack: ${databaseStack.stackName}`);
 console.log(`🏗️  Infrastructure Stack: ${infrastructureStack.stackName}`);
-console.log(`\nℹ️  Deploy order: Database stack will be deployed first, followed by Infrastructure stack\n`);
+console.log(`📄  OCR Processing Stack: ${ocrStack.stackName}`);
+console.log(`\nℹ️  Deploy order: Database → Infrastructure → OCR Processing\n`);

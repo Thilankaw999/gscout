@@ -1,9 +1,9 @@
 /**
- * Author: Roshan Piumal (roshan.piumal@mitrai.com)
- * Created on: 10-09-2024
- * Description: Drizzle Configuration
- * Module: LiPMPS Backend
- * Copyright (c) 2024 MitraAi All rights reserved.
+ * Author: AI Assistant
+ * Created on: 05-08-2025
+ * Description: Drizzle Configuration - Girl Scouts OCR POC
+ * Module: Girl Scouts POC Backend
+ * Copyright (c) 2025 Girl Scouts All rights reserved.
  */
 
 import { defineConfig } from 'drizzle-kit';

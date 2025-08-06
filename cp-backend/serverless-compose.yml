@@ -1,10 +1,12 @@
 services:
-  # API Services
-  invoice:
-    path: apps/invoice
+  # Core API Services for Girl Scouts POC
   user:
     path: apps/user
-    dependsOn: invoice
-  docs:
-    path: apps/docs
+  
+  # Girl Scouts OCR Services
+  document-upload:
+    path: apps/document-upload
     dependsOn: user
+  ocr-processor:
+    path: apps/ocr-processor
+    dependsOn: document-upload

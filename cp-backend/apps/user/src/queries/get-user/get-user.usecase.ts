@@ -1,112 +1,102 @@
 /**
  * get-user.usecase.ts
  * Author: Insurance Portal Development Team
- * Description: Retrieves user profile information for insurance portal
+ * Description: Retrieves user profile information via ITS System client service
  * Module: Insurance Property Portal Backend
  */
 
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, Scope, NotFoundException } from '@nestjs/common';
 import { UseCase } from '@app/common';
-import { UserRepository } from '@app/db';
-import { CustomerProfileResponseDto } from '../../dto/customer-profile.dto';
-import { UserContextService } from '@app/user-context';
+import { CustomerProfileDto } from '../../dto/customer-profile.dto';
 import { Logger } from '@app/logger';
+import { ItsSystemClientService } from '../../services/its-client.service';
+import { UserContextService } from '@app/user-context';
+import { 
+  UserProfileTransformationService, 
+  ItsSystemUserProfile 
+} from '../../services/user-profile-transformation.service';
 
-@Injectable()
-export class GetUserUseCase extends UseCase<void, CustomerProfileResponseDto> {
+@Injectable({ scope: Scope.REQUEST })
+export class GetUserUseCase extends UseCase<void, CustomerProfileDto> {
   constructor(
-    private readonly userContextService: UserContextService,
-    private readonly userRepository: UserRepository,
+    private readonly itsSystemClientService: ItsSystemClientService,
     private readonly logger: Logger,
+    private readonly userContextService: UserContextService,
+    private readonly userProfileTransformationService: UserProfileTransformationService,
   ) {
     super();
   }
 
-  async execute(): Promise<CustomerProfileResponseDto> {
-    try {
-      // Get user context from the request (populated by middleware)
-      const userContext = this.userContextService.getUserContext();
-      const { userId, cognitoKey } = userContext;
+  async execute(): Promise<CustomerProfileDto> {
+    const userEmail = this.userContextService.getEmail();
+    this.logUserProfileRetrievalStart(userEmail);
 
-      this.logger.debug('GetUserUseCase: Starting user profile retrieval', {
-        userId,
-        cognitoKey: cognitoKey ? '***' : undefined,
-      });
+    const userProfile = await this.fetchUserProfile(userEmail);
+    this.validateUserProfile(userProfile);
+    this.logUserProfileRetrievalOutcome(userEmail, userProfile);
 
-      // Validate that we have a valid user ID
-      if (!userId || userId <= 0) {
-        this.logger.error('GetUserUseCase: Invalid user ID', { userId });
-        throw new UnauthorizedException('Invalid user context');
-      }
+    return this.transformUserProfile(userProfile);
+  }
 
-      // Fetch user from database
-      const user = await this.userRepository.findById(userId);
+  /**
+   * Log the start of user profile retrieval process
+   * @param userEmail User's email address
+   */
+  private logUserProfileRetrievalStart(userEmail: string): void {
+    this.logger.debug('GetUserUseCase: Starting user profile retrieval', {
+      userEmail,
+    });
+  }
 
-      if (!user) {
-        this.logger.error('GetUserUseCase: User not found', {
-          userId,
-          cognitoKey: cognitoKey ? '***' : undefined,
-        });
-        throw new NotFoundException('User not found');
-      }
+  /**
+   * Fetch user profile from ITS System client service
+   * @param userEmail User's email address
+   * @param authorization Authorization token
+   * @returns Raw user profile data
+   */
+  private async fetchUserProfile(
+    userEmail: string
+  ): Promise<ItsSystemUserProfile> {
+    this.logger.debug('GetUserUseCase: Calling ITS System user client service', {
+      customerEmail: userEmail,
+    });
 
-      // Validate that the user is active
-      if (user.isActive !== 1) {
-        this.logger.warn('GetUserUseCase: User is inactive', {
-          userId,
-          isActive: user.isActive,
-        });
-        throw new UnauthorizedException('User account is inactive');
-      }
+    return this.itsSystemClientService.getUserProfile(userEmail);
+  }
 
-      this.logger.debug('GetUserUseCase: Successfully retrieved user profile', {
-        userId,
-        email: user.email,
-      });
-
-      // Return the user data in the expected API format
-      // Note: Address data is mocked since it's not in the user table
-      return {
-        code: 200,
-        message: 'User profile data retrieved successfully',
-        data: {
-          profilePictureUrl: 'https://abc/profile-picture.jpg', // Mock data as per API docs
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          phone: user.mobileNumber || '',
-          address: {
-            // Mock address data as per API documentation
-            line1: '3183 Orthello Way',
-            line2: '',
-            city: 'Santa Clara',
-            state: 'CA',
-            postalCode: '95051',
-            country: 'USA',
-          },
-        },
-      };
-    } catch (error) {
-      this.logger.error('GetUserUseCase: Error retrieving user profile', {
-        error: error.message,
-        stack: error.stack,
-        userId: this.userContextService.getUserId(),
-      });
-
-      // Re-throw the error if it's already a known exception
-      if (
-        error instanceof NotFoundException ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-
-      // For database or other unexpected errors, throw a generic error
-      throw new Error('Failed to retrieve user profile information');
+  /**
+   * Validate the retrieved user profile
+   * @param userProfile Raw user profile data
+   * @throws NotFoundException if profile is invalid
+   */
+  private validateUserProfile(userProfile: ItsSystemUserProfile): void {
+    if (!this.userProfileTransformationService.isValidUserProfile(userProfile)) {
+      this.logger.error('GetUserUseCase: Invalid or incomplete user profile', { userProfile });
+      throw new NotFoundException('User profile not found or incomplete');
     }
+  }
+
+  /**
+   * Log the outcome of user profile retrieval
+   * @param userEmail User's email address
+   * @param userProfile Retrieved user profile
+   */
+  private logUserProfileRetrievalOutcome(
+    userEmail: string, 
+    userProfile: ItsSystemUserProfile
+  ): void {
+    this.logger.debug('GetUserUseCase: Successfully retrieved user profile from ITS System client service', {
+      userEmail,
+      hasProfile: true,
+    });
+  }
+
+  /**
+   * Transform user profile to API response format
+   * @param userProfile Raw user profile data
+   * @returns Transformed customer profile
+   */
+  private transformUserProfile(userProfile: ItsSystemUserProfile): CustomerProfileDto {
+    return this.userProfileTransformationService.transformUserProfile(userProfile);
   }
 }

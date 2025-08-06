@@ -5,7 +5,7 @@
  * Module: LiSLS Boilerplate
  */
 
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, Scope } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AbilityBuilder, createMongoAbility } from '@casl/ability';
 import rolesFeatures from './role-features.json';
@@ -14,13 +14,15 @@ import { FeaturePermission } from './features.guard';
 import { UserContextService } from '@app/user-context';
 import { Logger } from '@app/logger';
 import { LOCAL_DEV } from '@app/common';
+import { UserRepository } from '@app/db';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class FeaturesGuard implements CanActivate {
   constructor(
     private readonly _logger: Logger,
     private reflector: Reflector,
     private readonly userContextService: UserContextService,
+    private readonly userRepository: UserRepository,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -38,41 +40,97 @@ export class FeaturesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
 
-    const cognitoUsername = isLocalDevelopment
-      ? LOCAL_DEV.COGNITO_USERNAME
-      : request?.['event']?.requestContext?.authorizer?.claims?.[
-      'email'
-      ];
+    // 🔐 Extract JWT claims properly
+    const claims = isLocalDevelopment
+      ? this.getMockClaims() // For local development
+      : request?.event?.requestContext?.authorizer?.claims; // From API Gateway
 
-    const cognitoKey = isLocalDevelopment
-      ? LOCAL_DEV.COGNITO_KEY
-      : request?.event?.requestContext?.authorizer?.claims?.sub;
+    if (!claims) {
+      this._logger.error('No JWT claims found in request');
+      throw new UnauthorizedException('Authentication required');
+    }
 
-    const role ='ADMIN'
-    this.userContextService.initialize({
-      userId: 1,
-      isStaff: true,
-      role: role,
-      email: 'john.doe@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      mobileNumber: '+1234567890',
-      isActive: true,
-      cognitoKey: cognitoKey,
-      cognitoUsername: cognitoUsername,
-      preferredName: 'John',
-      pronoun: 'John',
-      lastLoggedIn: new Date(),
-      federatedProviderType: 'GOOGLE',
+    // 📧 Extract user info from JWT claims
+    const userEmail = claims.email;
+    const cognitoSub = claims.sub;
+    const cognitoUsername = claims['cognito:username'] || claims.email;
+    const userRole = claims['cognito:groups']?.[0] || 'USER';
+    const firstName = claims.given_name || claims.first_name || '';
+    const lastName = claims.family_name || claims.last_name || '';
+
+    if (!userEmail) {
+      this._logger.error('No email found in JWT claims');
+      throw new UnauthorizedException('Invalid token: missing email');
+    }
+
+    this._logger.debug('JWT Claims extracted', {
+      userEmail,
+      userRole,
+      cognitoSub: cognitoSub ? '***' : undefined,
     });
 
-    this._logger.debug('User role: ', { role });
+    // 🔍 Find user by email in database
+    const user = await this.userRepository.findByEmail(userEmail);
+    
+    if (!user) {
+      this._logger.error('User not found in database', { userEmail });
+      throw new UnauthorizedException(`User with email ${userEmail} not found`);
+    }
 
-    const ability = this.defineAbility(role);
+    if (user.deletedAt) {
+      this._logger.error('User account is deactivated', { userEmail, userId: user.id });
+      throw new UnauthorizedException('User account is deactivated');
+    }
+
+    this._logger.debug('User found and verified', {
+      userId: user.id,
+      userEmail: user.email,
+      userRole,
+    });
+
+    // 🎯 Initialize user context with real data from JWT + Database
+    this.userContextService.initialize({
+      userId: user.id,
+      email: user.email,
+      firstName: user.name ? user.name.split(' ')[0] : '',
+      lastName: user.name ? user.name.split(' ').slice(1).join(' ') : '',
+      role: userRole,
+      isStaff: userRole === 'ADMIN' || userRole === 'STAFF',
+      mobileNumber: user.phone || '',
+      cognitoKey: cognitoSub,
+      cognitoUsername: cognitoUsername,
+      isActive: true, // User is active if not deleted
+      preferredName: user.name || '',
+      pronoun: '', // Optional, can be added later if needed
+      lastLoggedIn: new Date(),
+      federatedProviderType: 'COGNITO',
+    });
+
+    this._logger.debug('User context initialized', {
+      userId: user.id,
+      userEmail: user.email,
+      userRole,
+    });
+
+    const ability = this.defineAbility(userRole);
 
     return requiredPermissions.every(([resource, action]) =>
       ability.can(action, resource),
     );
+  }
+
+  /**
+   * 🧪 Mock claims for local development
+   */
+  private getMockClaims() {
+    return {
+      sub: LOCAL_DEV.COGNITO_KEY,
+      email: 'twidanagamage@mitrai.com',
+      'cognito:username': 'twidanagamage@mitrai.com',
+      'cognito:groups': ['ADMIN'],
+      given_name: 'Thi',
+      family_name: 'la',
+    };
   }
 
   private defineAbility(userRole: string) {

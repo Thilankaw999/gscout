@@ -5,5 +5,19 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "moduleNameMapper": {
+    "^@app/permissions(|/.*)$": "<rootDir>/libs/permissions/src/$1",
+    "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
+    "^@app/logger(|/.*)$": "<rootDir>/libs/logger/src/$1",
+    "^@app/db(|/.*)$": "<rootDir>/libs/db/src/$1",
+    "^@app/domain(|/.*)$": "<rootDir>/libs/domain/src/$1",
+    "^@app/user-context(|/.*)$": "<rootDir>/libs/user-context/src/$1",
+    "^@app/integrations(|/.*)$": "<rootDir>/libs/integrations/src/$1",
+    "^@app/aws(|/.*)$": "<rootDir>/libs/aws/src/$1",
+    "^@environment/(|/.*)$": "<rootDir>/environment/$1"
+  },
+  "setupFiles": [
+    "<rootDir>/jest/setup.ts"
+  ]
 }

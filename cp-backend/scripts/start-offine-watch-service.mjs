@@ -47,7 +47,15 @@ const startAndWatchApp = (app, appPath) => {
   );
 
   // Watch the app directory for changes, build it, and restart the service
-  const command = `nodemon --watch ${appPath}/src --watch ${libDir} -e ts --exec "rm -rf ${appPath}/.dist && npm run build ${app} && node --inspect ../../node_modules/.bin/serverless offline start --config ${path.join(appPath, 'serverless.yml')}"`;
+  const isWindows = process.platform === 'win32';
+  const rmCommand = isWindows ? `rimraf "${appPath}/.dist"` : `rm -rf ${appPath}/.dist`;
+  // For Windows, we'll clear NODE_OPTIONS to avoid tsx loader interference
+  // The debugger can still be attached manually if needed
+  const serverlessCommand = isWindows 
+    ? `set NODE_OPTIONS= && npx serverless offline start --config serverless.yml` 
+    : `NODE_OPTIONS= npx serverless offline start --config ${path.join(appPath, 'serverless.yml')}`;
+  
+  const command = `nodemon --watch ${appPath}/src --watch ${libDir} -e ts --exec "${rmCommand} && npm run build ${app} && ${serverlessCommand}"`;
 
   const subprocess = exec(command, { cwd: appPath });
 
@@ -76,8 +84,12 @@ const startProcess = (targetApp) => {
     process.exit(1);
   }
 
-  execSync('npm run clean');
+  // Clean only the target app instead of all apps
   const appPath = path.join(appsDir, targetApp);
+  const isWindows = process.platform === 'win32';
+  const cleanCommand = isWindows ? `rimraf "${appPath}/.dist"` : `rm -rf ${appPath}/.dist`;
+  execSync(cleanCommand);
+  
   buildApp(targetApp, () => startAndWatchApp(targetApp, appPath));
 };
 

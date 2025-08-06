@@ -8,10 +8,12 @@
 
 import { Module } from '@nestjs/common';
 import { BaseAPIModule } from './nest';
+import { HttpClientService } from './http-client.service';
+import { ConfigProvider } from './config-provider';
 
 @Module({
-  imports: [],
-  providers: [],
-  exports: [BaseAPIModule],
+  imports: [BaseAPIModule],
+  providers: [HttpClientService, ConfigProvider],
+  exports: [BaseAPIModule, HttpClientService, ConfigProvider],
 })
 export class CommonModule {}

@@ -24,7 +24,7 @@ import type { Response } from 'express';
 import { Logger, LoggerModule } from '@app/logger';
 import { ConfigProvider } from './config-provider';
 import { DbModule } from '@app/db';
-import { UserContextModule, UserContextService } from '@app/user-context';
+import { UserContextModule } from '@app/user-context';
 import { LoggingMiddleware } from './middleware/logging.middleware';
 import { UserContextMiddleware } from './middleware/user.context.middleware';
 import { AuditLogMiddleware } from './middleware/audit.middleware';
@@ -43,6 +43,11 @@ async function bootstrap(module: unknown): Promise<Handler> {
   });
 
   app.enableCors({ origin: '*' });
+  
+  // Enable JSON body parsing for serverless environments
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -58,8 +63,8 @@ async function bootstrap(module: unknown): Promise<Handler> {
 @Global()
 @Module({
   imports: [PermissionsModule, LoggerModule, UserContextModule, DbModule],
-  providers: [Logger, UserContextService, PermissionService, ConfigProvider],
-  exports: [Logger, UserContextService, PermissionService, ConfigProvider],
+  providers: [Logger, PermissionService, ConfigProvider],
+  exports: [Logger, PermissionService, ConfigProvider],
 })
 export class SharedModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

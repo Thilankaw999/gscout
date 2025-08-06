@@ -13,3 +13,4 @@ export * from './generic-usecase';
 export * from './config-provider';
 export * from './constants';
 export * from './utils';
+export * from './http-client.service';

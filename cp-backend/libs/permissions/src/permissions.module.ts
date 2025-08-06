@@ -10,9 +10,10 @@ import { Module } from '@nestjs/common';
 import { FeaturesGuard } from './features.decorator';
 import { PermissionService } from './permission.service';
 import { DbModule } from '@app/db';
+import { UserContextModule } from '@app/user-context';
 
 @Module({
-  imports: [DbModule],
+  imports: [DbModule, UserContextModule],
   providers: [FeaturesGuard, PermissionService],
   exports: [FeaturesGuard, PermissionService],
 })

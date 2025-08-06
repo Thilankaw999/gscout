@@ -91,7 +91,7 @@ export class RdsConstruct extends Construct {
     // Create the MySQL RDS instance
     this.dbInstance = new rds.DatabaseInstance(this, 'PCPApiDBInstance', {
       engine: rds.DatabaseInstanceEngine.mysql({
-        version: rds.MysqlEngineVersion.VER_8_0_35,
+        version: rds.MysqlEngineVersion.VER_8_0,
       }),
       instanceType: ec2.InstanceType.of(
         ec2.InstanceClass.T3,

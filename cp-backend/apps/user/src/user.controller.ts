@@ -7,13 +7,13 @@
 
 import {
   applyDecorators,
-  Body,
   Controller,
   Get,
   HttpStatus,
-  Patch,
   Res,
   UseGuards,
+  Headers,
+  Req,
 } from '@nestjs/common';
 import {
   ACTIONS,
@@ -26,14 +26,12 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBody,
   ApiExcludeEndpoint,
+  ApiHeader,
 } from '@nestjs/swagger';
 import { UserApiModule } from './user.module';
 import { GetUserUseCase } from './queries/get-user/get-user.usecase';
-import { PatchUserDto } from './dto/patch-user.dto';
-import { PatchUserUseCase } from './commands/patch-user/patch-user.usecase';
-import { CustomerProfileResponseDto } from './dto/customer-profile.dto';
+import { CustomerProfileDto} from './dto/customer-profile.dto';
 
 @Controller('user')
 @ApiTags('User')
@@ -41,21 +39,15 @@ import { CustomerProfileResponseDto } from './dto/customer-profile.dto';
 export class UserApiController {
   constructor(
     private readonly getUserUseCase: GetUserUseCase,
-    private readonly patchUserUseCase: PatchUserUseCase,
   ) {}
 
   @Get()
   @CheckFeatures([RESOURCES.USER, ACTIONS.GET])
   @GetUserAPIDocs()
-  async getUser(): Promise<CustomerProfileResponseDto> {
+  async getUser(
+    @Req() request: any,
+  ): Promise<CustomerProfileDto> {
     return this.getUserUseCase.execute();
-  }
-
-  @Patch()
-  @CheckFeatures([RESOURCES.USER, ACTIONS.PATCH])
-  @PatchUserAPIDocs()
-  async patchUser(@Body() patchUserDto: PatchUserDto) {
-    return this.patchUserUseCase.execute(patchUserDto);
   }
 
   @Get('/docs/swagger.json')
@@ -74,10 +66,15 @@ export class UserApiController {
 function GetUserAPIDocs() {
   return applyDecorators(
     ApiOperation({ summary: 'Retrieve user profile information' }),
+    ApiHeader({
+      name: 'authorization',
+      description: 'Bearer token for authentication',
+      required: true,
+    }),
     ApiResponse({
       status: HttpStatus.OK,
       description: 'User profile data retrieved successfully',
-      type: CustomerProfileResponseDto,
+      type: CustomerProfileDto,
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
@@ -87,26 +84,6 @@ function GetUserAPIDocs() {
       status: HttpStatus.NOT_FOUND,
       description: 'User not found',
     }),
-    ApiResponse({
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      description: 'Internal server error',
-    }),
-  );
-}
-
-function PatchUserAPIDocs() {
-  return applyDecorators(
-    ApiOperation({ summary: 'Update user information' }),
-    ApiBody({ type: PatchUserDto }),
-    ApiResponse({
-      status: HttpStatus.OK,
-      description: 'User data updated successfully',
-    }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
-      description: 'Unauthorized',
-    }),
-    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad request' }),
     ApiResponse({
       status: HttpStatus.INTERNAL_SERVER_ERROR,
       description: 'Internal server error',

@@ -14,14 +14,14 @@ import { BaseRepository, PaginationOptions, PaginatedResult } from './base.repos
 import { claims, Claim, NewClaim } from '../schema/claim.schema';
 
 export interface ClaimFilters {
-  userId?: number;
-  propertyId?: number;
-  damageType?: string;
-  progress?: string;
-  dateOfLossFrom?: Date;
-  dateOfLossTo?: Date;
-  search?: string; // Search in claim number, address, damage type
-}
+    customerEmail?: string;
+    policyTermId?: number;
+    damageType?: string;
+    claimStatus?: string;
+    dateOfLossFrom?: Date;
+    dateOfLossTo?: Date;
+    search?: string; // Search in claim number, address, damage type
+  }
 
 @Injectable()
 export class ClaimRepository extends BaseRepository<
@@ -36,16 +36,51 @@ export class ClaimRepository extends BaseRepository<
     super(db, claims);
   }
 
-  async findByUserId(userId: number): Promise<Claim[]> {
-    return await this.findMany(eq(claims.userId, userId));
+  async findByCustomerEmail(customerEmail: string): Promise<Claim[]> {
+    return await this.findMany(eq(claims.customerEmail, customerEmail));
   }
 
-  async findByClaimNumber(claimNumber: string): Promise<Claim | undefined> {
-    return await this.findOne(eq(claims.number, claimNumber));
-  }
+  /**
+   * Find all claims for a customer email formatted for mock API response
+   * @param customerEmail - Customer email address
+   * @returns Claims formatted for mock API response
+   */
+  async findClaimsByCustomerEmailForMockAPI(customerEmail: string): Promise<any[]> {
+    try {
+      const claimsList = await this.db
+        .select()
+        .from(claims)
+        .where(eq(claims.customerEmail, customerEmail))
+        .orderBy(desc(claims.lastUpdated));
 
-  async findByPropertyId(propertyId: number): Promise<Claim[]> {
-    return await this.findMany(eq(claims.propertyId, propertyId));
+      if (!claimsList || claimsList.length === 0) {
+        return [];
+      }
+
+      // Format the response to match API specification
+      const result = claimsList.map(claim => ({
+        policy_term_id: claim.policyTermId?.toString() || '',
+        id: `CLM-${claim.id.toString().padStart(5, '0')}`,
+        damage_type: claim.damageType,
+        date_of_loss: claim.dateOfLoss.toISOString().split('T')[0],
+        date_filed: claim.dateFilled.toISOString().split('T')[0],
+        claim_status: claim.claimStatus,
+        location: {
+          address_line1: claim.addressLine1,
+          address_line2: claim.addressLine2 || '',
+          city: claim.addressCity || '',
+          state: claim.addressState || '',
+          zip: claim.addressPostalCode || '',
+          country: claim.addressCountry || 'USA',
+        },
+        estimatedDamage: claim.estimatedDamage ? parseFloat(claim.estimatedDamage) : 0,
+        lastUpdated: claim.lastUpdated.toISOString().split('T')[0],
+      }));
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findClaimsWithFilters(
@@ -54,20 +89,20 @@ export class ClaimRepository extends BaseRepository<
   ): Promise<PaginatedResult<Claim>> {
     const conditions = [];
 
-    if (filters.userId) {
-      conditions.push(eq(claims.userId, filters.userId));
+    if (filters.customerEmail) {
+      conditions.push(eq(claims.customerEmail, filters.customerEmail));
     }
 
-    if (filters.propertyId) {
-      conditions.push(eq(claims.propertyId, filters.propertyId));
+    if (filters.policyTermId) {
+      conditions.push(eq(claims.policyTermId, filters.policyTermId));
     }
 
     if (filters.damageType) {
       conditions.push(eq(claims.damageType, filters.damageType));
     }
 
-    if (filters.progress) {
-      conditions.push(eq(claims.progress, filters.progress));
+    if (filters.claimStatus) {
+      conditions.push(eq(claims.claimStatus, filters.claimStatus));
     }
 
     if (filters.dateOfLossFrom) {
@@ -81,7 +116,7 @@ export class ClaimRepository extends BaseRepository<
     if (filters.search) {
       const searchTerm = `%${filters.search}%`;
       conditions.push(
-        sql`(${claims.number} LIKE ${searchTerm} OR ${claims.address} LIKE ${searchTerm} OR ${claims.damageType} LIKE ${searchTerm})`
+        sql`(${claims.addressLine1} LIKE ${searchTerm} OR ${claims.addressLine2} LIKE ${searchTerm} OR ${claims.damageType} LIKE ${searchTerm})`
       );
     }
 
@@ -97,67 +132,67 @@ export class ClaimRepository extends BaseRepository<
     return await this.paginate(paginationWithDefaults, whereClause);
   }
 
-  async findActiveClaimsByUserId(userId: number): Promise<Claim[]> {
+  async findActiveClaimsByCustomerEmail(customerEmail: string): Promise<Claim[]> {
     return await this.db
       .select()
       .from(claims)
       .where(
         and(
-          eq(claims.userId, userId),
-          sql`${claims.progress} NOT IN ('Closed', 'Settled', 'Denied')`
+          eq(claims.customerEmail, customerEmail),
+          sql`${claims.claimStatus} NOT IN ('Closed', 'Settled', 'Denied')`
         )
       )
       .orderBy(desc(claims.lastUpdated));
   }
 
-  async findRecentClaimsByUserId(userId: number, limit: number = 5): Promise<Claim[]> {
+  async findRecentClaimsByCustomerEmail(customerEmail: string, limit: number = 5): Promise<Claim[]> {
     return await this.db
       .select()
       .from(claims)
-      .where(eq(claims.userId, userId))
+      .where(eq(claims.customerEmail, customerEmail))
       .orderBy(desc(claims.lastUpdated))
       .limit(limit);
   }
 
-  async countClaimsByStatus(userId?: number): Promise<{ progress: string; count: number }[]> {
-    const conditions = userId ? [eq(claims.userId, userId)] : [];
+  async countClaimsByStatus(customerEmail?: string): Promise<{ claimStatus: string; count: number }[]> {
+    const conditions = customerEmail ? [eq(claims.customerEmail, customerEmail)] : [];
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const result = await this.db
       .select({
-        progress: claims.progress,
+        claimStatus: claims.claimStatus,
         count: sql<number>`count(*)`,
       })
       .from(claims)
       .where(whereClause)
-      .groupBy(claims.progress);
+      .groupBy(claims.claimStatus);
 
     return result;
   }
 
-  async updateClaimProgress(id: number, progress: string): Promise<Claim | undefined> {
+  async updateClaimStatus(id: number, claimStatus: string): Promise<Claim | undefined> {
     return await this.update(id, { 
-      progress,
+      claimStatus,
       lastUpdated: new Date(),
     });
   }
 
   async findClaimsByDateRange(
-    userId: number,
+    customerEmail: string,
     startDate: Date,
     endDate: Date
   ): Promise<Claim[]> {
     return await this.findMany(
       and(
-        eq(claims.userId, userId),
+        eq(claims.customerEmail, customerEmail),
         gte(claims.dateOfLoss, startDate),
         lte(claims.dateOfLoss, endDate)
       )
     );
   }
 
-  async getTotalEstimatedDamage(userId?: number): Promise<number> {
-    const conditions = userId ? [eq(claims.userId, userId)] : [];
+  async getTotalEstimatedDamage(customerEmail?: string): Promise<number> {
+    const conditions = customerEmail ? [eq(claims.customerEmail, customerEmail)] : [];
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const result = await this.db

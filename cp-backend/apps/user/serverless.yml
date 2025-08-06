@@ -7,10 +7,10 @@ provider:
   memorySize: 1800
   versionFunctions: false
   stage: ${opt:stage, "dev"}
-  region: 'ap-south-1'
+  region: 'ap-southeast-1'
   endpointType: ${file(${self:custom.envFilePath}):apiGatewayEndpointType}
   deploymentBucket:
-    name: pcp-api-deployments-${self:provider.stage}
+    name: ${self:provider.environment.DEPLOYMENT_BUCKET_NAME}
   environment: ${file(../../shared/commonEnvVars.yml):commonEnvVars}
   # vpc:
   #   securityGroupIds: ${file(${self:custom.envFilePath}):vpc.lambdaSecurityGroupIds}
@@ -35,7 +35,7 @@ custom:
     noPrependStageInUrl: true
     noTimeout: true
     verbose: true
-    prefix: 'user'
+    prefix: ''
   cognitoUserPoolArn: ${cf:pcp-${self:provider.stage}-infrastructure-stack.PCPApiUserPoolArn${self:provider.stage}}
 
 package:
@@ -58,18 +58,6 @@ functions:
             origin: '*'
             headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
           path: /
-          authorizer:
-            arn: ${self:custom.cognitoUserPoolArn}
-      - http:
-          method: PATCH
-          path: /
-          cors:
-            origin: '*'
-            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
-          request:
-            parameters:
-              headers:
-                account-key: true
           authorizer:
             arn: ${self:custom.cognitoUserPoolArn}
       - http:

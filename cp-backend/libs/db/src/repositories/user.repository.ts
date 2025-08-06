@@ -26,66 +26,31 @@ export class UserRepository extends BaseRepository<
     super(db, users);
   }
 
+  // findByCustomerId method removed as customerId field is no longer used
+
   async findByEmail(email: string): Promise<User | undefined> {
     return await this.findOne(eq(this.table.email, email));
   }
 
-  async findByCognitoKey(cognitoKey: string): Promise<User | undefined> {
-    return await this.findOne(eq(this.table.cognitoKey, cognitoKey));
-  }
-
-  async findByUserName(userName: string): Promise<User | undefined> {
-    return await this.findOne(eq(this.table.userName, userName));
-  }
-
-  async findByMobileNumber(mobileNumber: string): Promise<User | undefined> {
-    return await this.findOne(eq(this.table.mobileNumber, mobileNumber));
-  }
-
-  async findActiveUsers(): Promise<User[]> {
-    return await this.findMany(eq(this.table.isActive, 1));
-  }
-
-  async findStaffUsers(): Promise<User[]> {
-    return await this.findMany(eq(this.table.isStaff, 1));
-  }
-
-  async findVerifiedUsers(): Promise<User[]> {
-    return await this.findMany(eq(this.table.isVerified, 1));
+  async findByPhone(phone: string): Promise<User | undefined> {
+    return await this.findOne(eq(this.table.phone, phone));
   }
 
   async searchUsers(searchTerm: string): Promise<User[]> {
     return await this.findMany(
       or(
         like(this.table.email, `%${searchTerm}%`),
-        like(this.table.firstName, `%${searchTerm}%`),
-        like(this.table.lastName, `%${searchTerm}%`),
-        like(this.table.userName, `%${searchTerm}%`),
+        like(this.table.name, `%${searchTerm}%`),
+        like(this.table.phone, `%${searchTerm}%`),
       ),
     );
   }
 
-  async updateLastLoggedIn(id: number): Promise<User | undefined> {
-    return await this.update(id, { lastLoggedIn: new Date() });
+  async findByCity(city: string): Promise<User[]> {
+    return await this.findMany(eq(this.table.addressCity, city));
   }
 
-  async activateUser(id: number): Promise<User | undefined> {
-    return await this.update(id, { isActive: 1 });
-  }
-
-  async deactivateUser(id: number): Promise<User | undefined> {
-    return await this.update(id, { isActive: 0 });
-  }
-
-  async verifyUser(id: number): Promise<User | undefined> {
-    return await this.update(id, { isVerified: 1 });
-  }
-
-  async makeStaff(id: number): Promise<User | undefined> {
-    return await this.update(id, { isStaff: 1 });
-  }
-
-  async removeStaff(id: number): Promise<User | undefined> {
-    return await this.update(id, { isStaff: 0 });
+  async findByState(state: string): Promise<User[]> {
+    return await this.findMany(eq(this.table.addressState, state));
   }
 }

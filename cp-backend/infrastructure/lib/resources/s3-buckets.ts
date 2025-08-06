@@ -1,9 +1,9 @@
 /**
- * Author: Roshan Piumal (roshan.piumal@mitrai.com)
- * Created on: 21/09/2024
- * Description: S3BucketsConstruct
- * Module: PCP Boilerplate
- * Copyright (c) 2024 MitraAi All rights reserved.
+ * Author: AI Assistant
+ * Created on: 05-08-2025
+ * Description: S3BucketsConstruct for Girl Scouts OCR POC
+ * Module: Girl Scouts POC Backend
+ * Copyright (c) 2025 Girl Scouts All rights reserved.
  */
 
 import * as cdk from 'aws-cdk-lib';
@@ -20,7 +20,7 @@ interface BucketConfig {
 
 export class S3BucketsConstruct extends Construct {
   public readonly buckets: Map<string, s3.Bucket> = new Map();
-  public readonly deploymentsBucket!: s3.Bucket; // Definite assignment assertion  
+  public readonly mainBucket!: s3.Bucket; // Main bucket for TFR documents
   public readonly auditBucket!: s3.Bucket; // Definite assignment assertion
 
   constructor(scope: Construct, id: string) {
@@ -30,12 +30,12 @@ export class S3BucketsConstruct extends Construct {
 
     const bucketConfigs: BucketConfig[] = [
       {
-        bucketName: 'pcp-api-deployments',
-        logicalId: 'DeploymentsBucket',
-        description: 'Bucket for storing deployment artifacts',
+        bucketName: envFile.buckets.documents,
+        logicalId: 'TfrDocumentsBucket',
+        description: 'Bucket for storing TFR documents and bank statements',
       },
       {
-        bucketName: envFile.audit.s3.bucketName,
+        bucketName: envFile.buckets.audit,
         logicalId: 'AuditLogsBucket',
         description: 'Bucket for storing audit logs',
       },
@@ -45,7 +45,7 @@ export class S3BucketsConstruct extends Construct {
       const { bucketName, logicalId, description } = config;
 
       const bucket = new s3.Bucket(this, logicalId, {
-        bucketName: envSpecificParam(env, bucketName),
+        bucketName: `${bucketName}-${env}`,
         encryption: s3.BucketEncryption.S3_MANAGED,
         versioned: env === 'prod',
         publicReadAccess: false,
@@ -59,14 +59,20 @@ export class S3BucketsConstruct extends Construct {
             noncurrentVersionExpiration: cdk.Duration.days(30),
             abortIncompleteMultipartUploadAfter: cdk.Duration.days(7),
           },
+          {
+            id: 'DeleteTempDocuments',
+            enabled: true,
+            prefix: 'temp-documents/',
+            expiration: cdk.Duration.days(1),
+          },
         ],
       });
 
-      this.buckets.set(bucketName, bucket);
+      this.buckets.set(`${bucketName}-${env}`, bucket);
       
-      if (bucketName === 'pcp-api-deployments') {
-        (this as any).deploymentsBucket = bucket;
-      } else if (bucketName === envFile.audit.s3.bucketName) {
+      if (bucketName === `${envFile.buckets.documents}-${env}`) {
+        (this as any).mainBucket = bucket;
+      } else if (bucketName === `${envFile.buckets.audit}-${env}`) {
         (this as any).auditBucket = bucket;
       }
 

@@ -17,6 +17,7 @@
       "entryFile": "main",
       "sourceRoot": "apps/user/src",
       "compilerOptions": {
+        "deleteOutDir": false,
         "tsConfigPath": "apps/user/tsconfig.app.json",
         "webpackConfigPath": "apps/user/webpack.config.js"
       }
@@ -41,6 +42,16 @@
         "webpackConfigPath": "apps/docs/webpack.config.js"
       }
     },
+    "hello": {
+      "type": "application",
+      "root": "apps/hello",
+      "entryFile": "main",
+      "sourceRoot": "apps/hello/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/hello/tsconfig.app.json",
+        "webpackConfigPath": "apps/hello/webpack.config.js"
+      }
+    },
     "policy": {
       "type": "application",
       "root": "apps/policy",
@@ -59,6 +70,86 @@
       "compilerOptions": {
         "tsConfigPath": "apps/chatbot/tsconfig.app.json",
         "webpackConfigPath": "apps/chatbot/webpack.config.js"
+      }
+    },
+    "claim": {
+      "type": "application",
+      "root": "apps/claim",
+      "entryFile": "main",
+      "sourceRoot": "apps/claim/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/claim/tsconfig.app.json",
+        "webpackConfigPath": "apps/claim/webpack.config.js"
+      }
+    },
+    "properinsurance-user": {
+      "type": "application",
+      "root": "apps/properinsurance-user",
+      "entryFile": "main",
+      "sourceRoot": "apps/properinsurance-user/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/properinsurance-user/tsconfig.app.json",
+        "webpackConfigPath": "apps/properinsurance-user/webpack.config.js"
+      }
+    },
+    "properinsurance-policy": {
+      "type": "application",
+      "root": "apps/properinsurance-policy",
+      "entryFile": "main",
+      "sourceRoot": "apps/properinsurance-policy/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/properinsurance-policy/tsconfig.app.json",
+        "webpackConfigPath": "apps/properinsurance-policy/webpack.config.js"
+      }
+    },
+    "document": {
+      "type": "application",
+      "root": "apps/document",
+      "entryFile": "main",
+      "sourceRoot": "apps/document/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/document/tsconfig.app.json",
+        "webpackConfigPath": "apps/document/webpack.config.js"
+      }
+    },
+    "properinsurance-document": {
+      "type": "application",
+      "root": "apps/properinsurance-document",
+      "entryFile": "main",
+      "sourceRoot": "apps/properinsurance-document/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/properinsurance-document/tsconfig.app.json",
+        "webpackConfigPath": "apps/properinsurance-document/webpack.config.js"
+      }
+    },
+    "its-system": {
+      "type": "application",
+      "root": "apps/its-system",
+      "entryFile": "main",
+      "sourceRoot": "apps/its-system/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/its-system/tsconfig.app.json",
+        "webpackConfigPath": "apps/its-system/webpack.config.js"
+      }
+    },
+    "properinsurance-claim": {
+      "type": "application",
+      "root": "apps/properinsurance-claim",
+      "entryFile": "main",
+      "sourceRoot": "apps/properinsurance-claim/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/properinsurance-claim/tsconfig.app.json",
+        "webpackConfigPath": "apps/properinsurance-claim/webpack.config.js"
+      }
+    },
+    "its-policy-term-by-id": {
+      "type": "application",
+      "root": "apps/its-policy-term-by-id",
+      "entryFile": "main",
+      "sourceRoot": "apps/its-policy-term-by-id/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/its-policy-term-by-id/tsconfig.app.json",
+        "webpackConfigPath": "apps/its-policy-term-by-id/webpack.config.js"
       }
     },
     "permissions": {
@@ -176,6 +267,16 @@
       "sourceRoot": "libs/aws/src",
       "compilerOptions": {
         "tsConfigPath": "libs/aws/tsconfig.lib.json"
+      }
+    },
+    "lex-intent-handler": {
+      "type": "application",
+      "root": "apps/lex-intent-handler",
+      "entryFile": "main",
+      "sourceRoot": "apps/lex-intent-handler/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/lex-intent-handler/tsconfig.app.json",
+        "webpackConfigPath": "apps/lex-intent-handler/webpack.config.js"
       }
     }
   }

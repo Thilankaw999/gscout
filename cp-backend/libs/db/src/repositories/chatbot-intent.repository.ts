@@ -16,9 +16,8 @@ import { chatbotIntents, ChatbotIntent, NewChatbotIntent } from '../schema/chatb
 export interface ChatbotIntentFilters {
   userId?: number;
   intent?: string;
-  sessionId?: string;
-  processedFrom?: Date;
-  processedTo?: Date;
+  createdFrom?: Date;
+  createdTo?: Date;
 }
 
 @Injectable()
@@ -36,14 +35,6 @@ export class ChatbotIntentRepository extends BaseRepository<
 
   async findByUserId(userId: number): Promise<ChatbotIntent[]> {
     return await this.findMany(eq(chatbotIntents.userId, userId));
-  }
-
-  async findBySessionId(sessionId: string): Promise<ChatbotIntent[]> {
-    return await this.db
-      .select()
-      .from(chatbotIntents)
-      .where(eq(chatbotIntents.sessionId, sessionId))
-      .orderBy(desc(chatbotIntents.processed));
   }
 
   async findByIntent(intent: string): Promise<ChatbotIntent[]> {
@@ -64,23 +55,19 @@ export class ChatbotIntentRepository extends BaseRepository<
       conditions.push(eq(chatbotIntents.intent, filters.intent));
     }
 
-    if (filters.sessionId) {
-      conditions.push(eq(chatbotIntents.sessionId, filters.sessionId));
+    if (filters.createdFrom) {
+      conditions.push(gte(chatbotIntents.createdAt, filters.createdFrom));
     }
 
-    if (filters.processedFrom) {
-      conditions.push(gte(chatbotIntents.processed, filters.processedFrom));
-    }
-
-    if (filters.processedTo) {
-      conditions.push(lte(chatbotIntents.processed, filters.processedTo));
+    if (filters.createdTo) {
+      conditions.push(lte(chatbotIntents.createdAt, filters.createdTo));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Default to ordering by most recent interactions first
     const paginationWithDefaults = {
-      orderBy: 'processed',
+      orderBy: 'createdAt',
       orderDirection: 'desc' as const,
       ...pagination,
     };
@@ -93,7 +80,7 @@ export class ChatbotIntentRepository extends BaseRepository<
       .select()
       .from(chatbotIntents)
       .where(eq(chatbotIntents.userId, userId))
-      .orderBy(desc(chatbotIntents.processed))
+      .orderBy(desc(chatbotIntents.createdAt))
       .limit(limit);
   }
 
@@ -135,18 +122,10 @@ export class ChatbotIntentRepository extends BaseRepository<
     return await this.findMany(
       and(
         eq(chatbotIntents.userId, userId),
-        gte(chatbotIntents.processed, startDate),
-        lte(chatbotIntents.processed, endDate)
+        gte(chatbotIntents.createdAt, startDate),
+        lte(chatbotIntents.createdAt, endDate)
       )
     );
-  }
-
-  async getSessionInteractions(sessionId: string): Promise<ChatbotIntent[]> {
-    return await this.db
-      .select()
-      .from(chatbotIntents)
-      .where(eq(chatbotIntents.sessionId, sessionId))
-      .orderBy(chatbotIntents.processed); // Chronological order for session
   }
 
   async deleteOldIntents(daysOld: number): Promise<void> {
@@ -154,7 +133,7 @@ export class ChatbotIntentRepository extends BaseRepository<
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
     await this.deleteMany(
-      sql`${chatbotIntents.processed} < ${cutoffDate}`,
+      sql`${chatbotIntents.createdAt} < ${cutoffDate}`,
       'system-cleanup'
     );
   }

@@ -1,7 +1,7 @@
 /**
  * Author: Roshan Piumal (roshan.piumal@mitrai.com)
  * Created on: 10-09-2024
- * Description: User Schema using Drizzle ORM
+ * Description: CustomerProfile Schema using Drizzle ORM
  * Module: LiPMPS Backend
  * Copyright (c) 2024 MitraAi All rights reserved.
  */
@@ -10,44 +10,55 @@ import {
   mysqlTable,
   int,
   varchar,
-  tinyint,
-  datetime,
-  timestamp,
+  text,
   index,
   uniqueIndex,
 } from 'drizzle-orm/mysql-core';
 import { auditFields, WithAuditFields } from './base.schema';
 
+/**
+ * Author: AI Assistant
+ * Created on: 05-08-2025
+ * Description: User Schema for Girl Scouts OCR POC - Simplified for admin users
+ * Module: Girl Scouts POC Backend
+ * Copyright (c) 2025 Girl Scouts All rights reserved.
+ */
+
+import {
+  mysqlTable,
+  int,
+  varchar,
+  text,
+  index,
+  uniqueIndex,
+  mysqlEnum,
+} from 'drizzle-orm/mysql-core';
+import { auditFields, WithAuditFields } from './base.schema';
+
 export const users = mysqlTable(
-  'user',
+  'users',
   {
     id: int('id').primaryKey().autoincrement(),
-    email: varchar('email', { length: 100 }).notNull(),
-    firstName: varchar('first_name', { length: 100 }).notNull(),
-    lastName: varchar('last_name', { length: 100 }).notNull(),
-    userName: varchar('user_name', { length: 100 }),
-    mobileNumber: varchar('mobile_number', { length: 20 }),
-    tncAcceptedDate: datetime('tnc_accepted_date'),
-    isActive: tinyint('is_active').notNull().default(1),
-    isStaff: tinyint('is_staff').notNull().default(0),
-    cognitoKey: varchar('cognito_key', { length: 36 }),
-    isVerified: tinyint('is_verified').notNull(),
-    lastLoggedIn: timestamp('last_logged_in'),
-    preferredName: varchar('preferred_name', { length: 100 }),
-    pronoun: varchar('pronoun', { length: 50 }),
+    email: varchar('email', { length: 255 }).notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    phone: varchar('phone', { length: 50 }),
+    
+    // Girl Scouts specific fields
+    role: mysqlEnum('role', ['admin', 'staff', 'viewer']).default('viewer'),
+    councilId: varchar('council_id', { length: 50 }), // Girl Scouts council identifier
+    permissions: text('permissions'), // JSON string of permissions
+    
+    // Basic contact info (simplified)
+    organization: varchar('organization', { length: 255 }).default('Girl Scouts of Eastern Pennsylvania'),
+    
     ...auditFields,
   },
   (table) => ({
-    cognitoKeyIndex: index('user_cognito_key_index').on(table.cognitoKey),
-    emailIndex: index('idx_user_email').on(table.email),
-    userNameIndex: index('idx_user_user_name').on(table.userName),
-    mobileNumberIndex: index('idx_user_mobile_number').on(table.mobileNumber),
-    isActiveIndex: index('idx_user_is_active').on(table.isActive),
-    isStaffIndex: index('idx_user_is_staff').on(table.isStaff),
-    isVerifiedIndex: index('idx_user_is_verified').on(table.isVerified),
-    deletedAtIndex: index('idx_user_deleted_at').on(table.deletedAt),
-    emailUnique: uniqueIndex('uk_user_email').on(table.email),
-    cognitoKeyUnique: uniqueIndex('uk_user_cognito_key').on(table.cognitoKey),
+    emailIndex: index('idx_users_email').on(table.email),
+    roleIndex: index('idx_users_role').on(table.role),
+    councilIndex: index('idx_users_council').on(table.councilId),
+    deletedAtIndex: index('idx_users_deleted_at').on(table.deletedAt),
+    emailUnique: uniqueIndex('uk_users_email').on(table.email),
   }),
 );
 

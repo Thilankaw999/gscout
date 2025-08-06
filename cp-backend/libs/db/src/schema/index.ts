@@ -1,15 +1,11 @@
 /**
- * Author: Roshan Piumal (roshan.piumal@mitrai.com)
- * Created on: 10-09-2024
- * Description: Drizzle Schema Index
- * Module: LiPMPS Backend
- * Copyright (c) 2024 MitraAi All rights reserved.
+ * Author: AI Assistant
+ * Created on: 05-08-2025
+ * Description: Drizzle Schema Index - Girl Scouts OCR POC
+ * Module: Girl Scouts POC Backend
+ * Copyright (c) 2025 Girl Scouts All rights reserved.
  */
 
-export * from './user.schema';
-export * from './invoice.schema';
 export * from './base.schema';
-export * from './property.schema';
-export * from './claim.schema';
-export * from './document.schema';
-export * from './chatbot-intent.schema';
+export * from './user.schema';
+export * from './tfr.schema';

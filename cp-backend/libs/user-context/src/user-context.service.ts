@@ -6,11 +6,11 @@
  * Copyright (c) 2024 MitraAi All rights reserved.
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Scope } from '@nestjs/common';
 import { Logger } from '@app/logger';
-import { USER_CONTEXT_IDENTIFIER } from '@app/common';
+import { USER_CONTEXT_IDENTIFIER, LOCAL_DEV, ROLE_KEYS } from '@app/common';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class UserContextService {
   private userId!: number;
   private email!: string;
@@ -28,6 +28,7 @@ export class UserContextService {
   private federatedProviderType!: string;
 
   private isInitialized = false;
+  private readonly isLocalDevelopment = process.env.IS_OFFLINE === 'true' && process.env.STAGE === 'dev';
 
   constructor(private readonly logger: Logger) {}
 
@@ -35,7 +36,16 @@ export class UserContextService {
    * Initializes the user context with the given values.
    * All properties must be set to avoid null or undefined values.
    */
-  initialize(context: IUserContext): void {
+  initialize(context?: IUserContext): void {
+    // If in local development and no context provided, use mock data
+    if (this.isLocalDevelopment && !context) {
+      context = this.getMockUserContext();
+    }
+
+    if (!context) {
+      throw new Error('UserContextService: No context provided');
+    }
+
     this.userId = context.userId;
     this.email = context.email;
     this.firstName = context.firstName;
@@ -50,15 +60,50 @@ export class UserContextService {
     this.pronoun = context.pronoun;
     this.lastLoggedIn = context.lastLoggedIn;
     this.federatedProviderType = context.federatedProviderType;
+    
     this.logger.debug('UserContextService: Initialized with context', {
       context,
+      isLocalDevelopment: this.isLocalDevelopment,
     });
+    
     Reflect.defineMetadata(
       USER_CONTEXT_IDENTIFIER,
       { userId: context?.userId },
       global,
     );
     this.isInitialized = true;
+  }
+
+  /**
+   * Provides mock user context for local development
+   * @returns Mock user context based on local development settings
+   */
+  private getMockUserContext(): IUserContext {
+    const mockClaims = {
+      sub: LOCAL_DEV.COGNITO_KEY,
+      email: 'twidanagamage@mitrai.com',
+      'cognito:username': LOCAL_DEV.COGNITO_USERNAME,
+      'cognito:groups': [ROLE_KEYS.ADMIN],
+      given_name: 'Test',
+      family_name: 'User',
+    };
+
+    return {
+      userId: 1, // Default mock user ID
+      email: mockClaims.email,
+      firstName: mockClaims.given_name,
+      lastName: mockClaims.family_name,
+      role: mockClaims['cognito:groups']?.[0] || ROLE_KEYS.USER,
+      isStaff: mockClaims['cognito:groups']?.[0] === ROLE_KEYS.ADMIN,
+      mobileNumber: '', // Add if needed
+      cognitoKey: mockClaims.sub,
+      cognitoUsername: mockClaims['cognito:username'],
+      isActive: true,
+      preferredName: `${mockClaims.given_name} ${mockClaims.family_name}`.trim(),
+      pronoun: '', // Optional
+      lastLoggedIn: new Date(),
+      federatedProviderType: 'LOCAL',
+    };
   }
 
   /**
@@ -170,6 +215,40 @@ export class UserContextService {
     this.logger.debug('UserContextService: Cleared');
     this.isInitialized = false;
     Reflect.defineMetadata(USER_CONTEXT_IDENTIFIER, { userId: null }, global);
+  }
+
+  /**
+   * Returns the full name of the user
+   */
+  getFullName(): string {
+    this.ensureInitialized();
+    // Combine first and last name, or use preferred name
+    return this.preferredName || `${this.firstName} ${this.lastName}`.trim();
+  }
+
+  /**
+   * Convenience method to get user profile in new endpoint format
+   */
+  getUserProfile(): {
+    name: string;
+    email: string;
+    phone: string;
+    address?: {
+      line1: string;
+      line2?: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+    };
+  } {
+    this.ensureInitialized();
+    return {
+      name: this.getFullName(),
+      email: this.email,
+      phone: this.mobileNumber,
+      // Note: Address would typically come from a separate service
+    };
   }
 }
 

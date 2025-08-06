@@ -1,0 +1,80 @@
+service: ocr-processor
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: './webpack.config.js'
+    includeModules: false
+    packager: 'npm'
+    excludeFiles: src/**/*.spec.js
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  timeout: 900 # 15 minutes for OCR processing
+  memorySize: 3008 # High memory for Textract processing
+  stage: ${opt:stage, 'dev'}
+  region: ${env:AWS_REGION, 'us-east-1'}
+  environment:
+    NODE_ENV: ${env:NODE_ENV, 'development'}
+    STAGE: ${self:provider.stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - textract:AnalyzeDocument
+            - textract:AnalyzeExpense
+            - textract:StartDocumentAnalysis
+            - textract:GetDocumentAnalysis
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+          Resource: 
+            - "arn:aws:s3:::${env:TFR_DOCUMENTS_BUCKET}/*"
+        - Effect: Allow
+          Action:
+            - states:StartExecution
+          Resource: 
+            - "arn:aws:states:${self:provider.region}:*:stateMachine:*"
+        - Effect: Allow
+          Action:
+            - events:PutEvents
+          Resource: 
+            - "arn:aws:events:${self:provider.region}:*:event-bus/*"
+
+functions:
+  extractTfrData:
+    handler: src/main.handler
+    events:
+      - http:
+          method: post
+          path: /extract-tfr-data
+          cors: true
+      - eventBridge:
+          eventBus: ${env:PROCESSING_EVENT_BUS}
+          pattern:
+            source: ['girl-scouts.document-upload']
+            detail-type: ['TFR Document Uploaded']
+
+  validateTfrData:
+    handler: src/main.handler
+    events:
+      - http:
+          method: post
+          path: /validate-tfr-data
+          cors: true
+
+  getProcessingStatus:
+    handler: src/main.handler
+    events:
+      - http:
+          method: get
+          path: /processing-status/{documentId}
+          cors: true

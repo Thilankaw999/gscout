@@ -32,6 +32,7 @@ export class CognitoAuthConstruct extends Construct {
       callbackUrls: [
         `https://${webDomain}`,
         `https://${webDomain}/auth/callback`,
+        'https://oauth.pstmn.io/v1/callback', // Added Postman OAuth callback
         ...(env === 'dev' ? [
           'http://localhost:3000',
           'http://localhost:3000/auth/callback',
@@ -45,7 +46,7 @@ export class CognitoAuthConstruct extends Construct {
 
     // Create the User Pool with enhanced security
     const userPool = new cognito.UserPool(this, 'PCPApiUserPool', {
-      userPoolName: envSpecificParam(env, 'pcp-api-user-pool'),
+      userPoolName: envSpecificParam(env, 'sbx-pcp-api-user-pool-2'),
       selfSignUpEnabled: env !== 'prod', // Disable self-signup in production
       signInAliases: {
         email: true,
@@ -101,7 +102,7 @@ export class CognitoAuthConstruct extends Construct {
     // Add Cognito Domain
     const cognitoDomain = userPool.addDomain('PCPApiCognitoDomain', {
       cognitoDomain: {
-        domainPrefix: envSpecificParam(env, 'pcp-api-auth'),
+        domainPrefix: envSpecificParam(env, 'pcp-api-auth-2'),
       },
     });
 

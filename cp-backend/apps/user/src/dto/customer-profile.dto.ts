@@ -5,14 +5,14 @@
  * Module: Insurance Property Portal Backend
  */
 
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class AddressDto {
   @ApiProperty({ example: '3183 Orthello Way' })
   line1: string;
 
-  @ApiPropertyOptional({ example: '' })
-  line2?: string;
+  @ApiProperty({ example: '', nullable: true })
+  line2: string | null;
 
   @ApiProperty({ example: 'Santa Clara' })
   city: string;
@@ -27,15 +27,9 @@ export class AddressDto {
   country: string;
 }
 
-export class CustomerProfileDataDto {
-  @ApiPropertyOptional({ example: 'https://abc/profile-picture.jpg' })
-  profilePictureUrl?: string;
-
-  @ApiProperty({ example: 'Shannon' })
-  firstName: string;
-
-  @ApiProperty({ example: 'Prunkl' })
-  lastName: string;
+export class CustomerProfileDto {
+  @ApiProperty({ example: 'Shannon Prunkl' })
+  name: string;
 
   @ApiProperty({ example: 'shannon@proper.insure' })
   email: string;
@@ -48,12 +42,6 @@ export class CustomerProfileDataDto {
 }
 
 export class CustomerProfileResponseDto {
-  @ApiProperty({ example: 200 })
-  code: number;
-
-  @ApiProperty({ example: 'User profile data retrieved successfully' })
-  message: string;
-
-  @ApiProperty({ type: CustomerProfileDataDto })
-  data: CustomerProfileDataDto;
+  @ApiProperty({ type: CustomerProfileDto })
+  data: CustomerProfileDto;
 } 

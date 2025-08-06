@@ -96,13 +96,13 @@ export class DocumentRepository extends BaseRepository<
     );
   }
 
-  async updateDownloadUrl(
+  async updateCachedDownloadUrl(
     id: number,
-    downloadUrl: string,
+    cachedDownloadUrl: string,
     expiresAt: Date
   ): Promise<Document | undefined> {
     return await this.update(id, {
-      downloadUrl,
+      cachedDownloadUrl,
       urlExpiresAt: expiresAt,
     });
   }
@@ -114,7 +114,7 @@ export class DocumentRepository extends BaseRepository<
         sql`${documents.urlExpiresAt} < NOW()`
       ),
       {
-        downloadUrl: null,
+        cachedDownloadUrl: null,
         urlExpiresAt: null,
       }
     );
