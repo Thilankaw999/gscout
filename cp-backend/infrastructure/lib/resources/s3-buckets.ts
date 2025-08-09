@@ -70,9 +70,9 @@ export class S3BucketsConstruct extends Construct {
 
       this.buckets.set(`${bucketName}-${env}`, bucket);
       
-      if (bucketName === `${envFile.buckets.documents}-${env}`) {
+      if (`${bucketName}-${env}` === `${envFile.buckets.documents}-${env}`) {
         (this as any).mainBucket = bucket;
-      } else if (bucketName === `${envFile.buckets.audit}-${env}`) {
+      } else if (`${bucketName}-${env}` === `${envFile.buckets.audit}-${env}`) {
         (this as any).auditBucket = bucket;
       }
 

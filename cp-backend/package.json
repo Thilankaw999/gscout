@@ -37,6 +37,8 @@
   "dependencies": {
     "@aws-crypto/client-node": "^4.0.2",
     "@aws-lambda-powertools/logger": "^2.7.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.864.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.862.0",
     "@aws-sdk/client-dynamodb": "^3.797.0",
     "@aws-sdk/client-firehose": "^3.797.0",
     "@aws-sdk/client-lex-runtime-v2": "^3.856.0",

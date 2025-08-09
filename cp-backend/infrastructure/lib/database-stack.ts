@@ -2,8 +2,8 @@
  * Author: Assistant
  * Created on: 2024-12-21
  * Description: Database Stack - Stateful Resources
- * Module: Infrastructure
- * Copyright (c) 2024 All rights reserved.
+ * Module: Girl Scouts OCR POC Infrastructure
+ * Copyright (c) 2024 Girl Scouts All rights reserved.
  */
 
 import * as cdk from 'aws-cdk-lib';
@@ -33,7 +33,7 @@ export class DatabaseStack extends cdk.Stack {
     const env = getEnvironment(this.node);
 
     // Create RDS MySQL instance
-    this.rdsConstruct = new RdsConstruct(this, envSpecificParam(env, 'pcp-api-mysql-rds'));
+    this.rdsConstruct = new RdsConstruct(this, envSpecificParam(env, 'girl-scouts-ocr-mysql-rds'));
 
     // Store outputs for cross-stack references
     this.dbEndpoint = this.rdsConstruct.dbEndpoint;
@@ -45,47 +45,47 @@ export class DatabaseStack extends cdk.Stack {
 
     // Export values for other stacks to import
     new cdk.CfnOutput(this, 'DatabaseEndpointExport', {
-      key: envSpecificParam(env, 'DatabaseEndpoint', ''),
-      exportName: envSpecificParam(env, 'DatabaseEndpoint', ''),
+      key: envSpecificParam(env, 'GirlScoutsDatabaseEndpoint', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsDatabaseEndpoint', ''),
       value: this.dbEndpoint,
-      description: 'RDS Database endpoint for cross-stack reference'
+      description: 'Girl Scouts RDS Database endpoint for cross-stack reference'
     });
 
     new cdk.CfnOutput(this, 'DatabasePortExport', {
-      key: envSpecificParam(env, 'DatabasePort', ''),
-      exportName: envSpecificParam(env, 'DatabasePort', ''),
+      key: envSpecificParam(env, 'GirlScoutsDatabasePort', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsDatabasePort', ''),
       value: this.dbPort.toString(),
-      description: 'RDS Database port for cross-stack reference'
+      description: 'Girl Scouts RDS Database port for cross-stack reference'
     });
 
     new cdk.CfnOutput(this, 'DatabaseSecretArnExport', {
-      key: envSpecificParam(env, 'DatabaseSecretArn', ''),
-      exportName: envSpecificParam(env, 'DatabaseSecretArn', ''),
+      key: envSpecificParam(env, 'GirlScoutsDatabaseSecretArn', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsDatabaseSecretArn', ''),
       value: this.dbSecretArn,
-      description: 'RDS Database secret ARN for cross-stack reference'
+      description: 'Girl Scouts RDS Database secret ARN for cross-stack reference'
     });
 
     new cdk.CfnOutput(this, 'LambdaSecurityGroupExport', {
-      key: envSpecificParam(env, 'LambdaSecurityGroup', ''),
-      exportName: envSpecificParam(env, 'LambdaSecurityGroup', ''),
+      key: envSpecificParam(env, 'GirlScoutsLambdaSecurityGroup', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsLambdaSecurityGroup', ''),
       value: this.lambdaSecurityGroupId,
-      description: 'Lambda security group ID for RDS access'
+      description: 'Girl Scouts Lambda security group ID for RDS access'
     });
 
     // Export VPC ID for Lambda functions
     new cdk.CfnOutput(this, 'VpcIdExport', {
-      key: envSpecificParam(env, 'VpcId', ''),
-      exportName: envSpecificParam(env, 'VpcId', ''),
+      key: envSpecificParam(env, 'GirlScoutsVpcId', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsVpcId', ''),
       value: this.vpcId,
-      description: 'VPC ID where RDS instance is deployed'
+      description: 'Girl Scouts VPC ID where RDS instance is deployed'
     });
 
     // Export subnet IDs for Lambda functions
     new cdk.CfnOutput(this, 'SubnetIdsExport', {
-      key: envSpecificParam(env, 'SubnetIds', ''),
-      exportName: envSpecificParam(env, 'SubnetIds', ''),
+      key: envSpecificParam(env, 'GirlScoutsSubnetIds', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsSubnetIds', ''),
       value: this.subnetIds.join(','),
-      description: 'Comma-separated list of public subnet IDs where Lambda functions can be deployed'
+      description: 'Girl Scouts Comma-separated list of public subnet IDs where Lambda functions can be deployed'
     });
   }
 } 

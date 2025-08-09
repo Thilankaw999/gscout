@@ -1,13 +1,34 @@
 /**
- * Author: AI Assistant
+ * Author: AI Assistant  
  * Created on: 05-08-2025
- * Description: Document Upload Controller
+ * Description: Controller to manage TFR document upload operations for Girl Scouts POC
  * Module: Girl Scouts POC Backend
- * Copyright (c) 2025 Girl Scouts All rights reserved.
  */
 
-import { Controller, Post, Get, Body, Query, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  applyDecorators,
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import {
+  ACTIONS,
+  CheckFeatures,
+  FeaturesGuard,
+  RESOURCES,
+} from '@app/permissions';
+import { createSwaggerResponse } from '@app/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { UploadTfrDocumentUseCase } from './commands/upload-tfr-document/upload-tfr-document.usecase';
 import { GetTfrDocumentsUseCase } from './queries/get-tfr-documents/get-tfr-documents.usecase';
 import { GenerateUploadUrlUseCase } from './commands/generate-upload-url/generate-upload-url.usecase';
@@ -15,8 +36,9 @@ import { UploadTfrDocumentCommand } from './commands/upload-tfr-document/upload-
 import { GetTfrDocumentsQuery } from './queries/get-tfr-documents/get-tfr-documents.query';
 import { GenerateUploadUrlCommand } from './commands/generate-upload-url/generate-upload-url.command';
 
+@Controller('document-upload')
 @ApiTags('Document Upload')
-@Controller()
+@UseGuards(FeaturesGuard)
 export class DocumentUploadController {
   constructor(
     private readonly uploadTfrDocumentUseCase: UploadTfrDocumentUseCase,
@@ -25,29 +47,69 @@ export class DocumentUploadController {
   ) {}
 
   @Get('upload-url')
-  @ApiOperation({ summary: 'Generate presigned URL for TFR document upload' })
-  @ApiQuery({ name: 'fileName', description: 'Original filename' })
-  @ApiQuery({ name: 'troopId', description: 'Troop ID' })
-  @ApiQuery({ name: 'reportPeriod', description: 'Report period (YYYY-MM-DD)' })
-  @ApiResponse({ status: 200, description: 'Presigned URL generated successfully' })
+  @CheckFeatures([RESOURCES.DOCUMENTS, ACTIONS.CREATE])
+  @GenerateUploadUrlAPIDocs()
   async generateUploadUrl(
     @Query('fileName') fileName: string,
     @Query('troopId') troopId: string,
     @Query('reportPeriod') reportPeriod: string,
+    @Req() request: any,
   ) {
     const command = new GenerateUploadUrlCommand(fileName, troopId, reportPeriod);
     return this.generateUploadUrlUseCase.execute(command);
   }
 
   @Post('upload-tfr')
-  @ApiOperation({ summary: 'Record TFR document upload and trigger processing' })
-  @ApiResponse({ status: 201, description: 'Document uploaded and processing initiated' })
-  async uploadTfrDocument(@Body() command: UploadTfrDocumentCommand) {
+  @CheckFeatures([RESOURCES.DOCUMENTS, ACTIONS.CREATE])
+  @UploadTfrDocumentAPIDocs()
+  async uploadTfrDocument(
+    @Body() command: UploadTfrDocumentCommand,
+    @Req() request: any,
+  ) {
     return this.uploadTfrDocumentUseCase.execute(command);
   }
 
   @Get('tfr-documents')
-  @ApiOperation({ summary: 'Get all TFR documents with optional filtering' })
+  @CheckFeatures([RESOURCES.DOCUMENTS, ACTIONS.GET])
+  @GetTfrDocumentsAPIDocs()
+  async getTfrDocuments(
+    @Query('troopId') troopId?: string,
+    @Query('status') status?: string,
+    @Query('limit') limit?: number,
+    @Req() request: any,
+  ) {
+    const query = new GetTfrDocumentsQuery(troopId, status, limit);
+    return this.getTfrDocumentsUseCase.execute(query);
+  }
+}
+
+// API Documentation Decorators (following user pattern)
+function GenerateUploadUrlAPIDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Generate presigned URL for TFR document upload' }),
+    ApiQuery({ name: 'fileName', description: 'Original filename' }),
+    ApiQuery({ name: 'troopId', description: 'Troop ID' }),
+    ApiQuery({ name: 'reportPeriod', description: 'Report period (YYYY-MM-DD)' }),
+    ApiResponse(createSwaggerResponse('Presigned URL generated successfully', 200)),
+  );
+}
+
+function UploadTfrDocumentAPIDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Record TFR document upload and trigger processing' }),
+    ApiResponse(createSwaggerResponse('Document uploaded and processing initiated', 201)),
+  );
+}
+
+function GetTfrDocumentsAPIDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Get all TFR documents with optional filtering' }),
+    ApiQuery({ name: 'troopId', required: false, description: 'Filter by troop ID' }),
+    ApiQuery({ name: 'status', required: false, description: 'Filter by document status' }),
+    ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limit number of results' }),
+    ApiResponse(createSwaggerResponse('TFR documents retrieved successfully', 200)),
+  );
+}
   @ApiQuery({ name: 'troopId', required: false, description: 'Filter by troop ID' })
   @ApiQuery({ name: 'status', required: false, description: 'Filter by processing status' })
   @ApiQuery({ name: 'reportYear', required: false, description: 'Filter by report year' })

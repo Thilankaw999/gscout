@@ -1,6 +1,7 @@
 commonEnvVars:
   STAGE: ${opt:stage, "dev"}
-  # LOG_LEVEL: DEBUG
+  LOG_LEVEL: ${file(${self:custom.envFilePath}):logLevel, "INFO"}
+  # IS_OFFLINE: ${file(${self:custom.envFilePath}):isOffline, "false"}
   auditEventStreamName: ${file(${self:custom.envFilePath}):audit.kinesis.auditEventDeliveryStream}-${self:provider.stage}
   isAuditEnabled: ${file(${self:custom.envFilePath}):isAuditEnabled}
   DB_HOST: ${file(${self:custom.envFilePath}):database.host}

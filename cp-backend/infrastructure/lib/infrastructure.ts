@@ -12,7 +12,6 @@ import { getEnvironment, envSpecificParam } from '../utils';
 import { CognitoAuthConstruct } from './resources/congnito-userpool';
 import { S3BucketsConstruct } from './resources/s3-buckets';
 
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -25,8 +24,6 @@ export interface InfrastructureStackProps extends cdk.StackProps {
 }
 
 export class InfrastructureStack extends cdk.Stack {
-  public readonly dummyAuthSecret: secretsmanager.Secret;
-
   constructor(scope: Construct, id: string, props?: InfrastructureStackProps) {
     super(scope, id, props);
 
@@ -39,9 +36,6 @@ export class InfrastructureStack extends cdk.Stack {
       this,
       envSpecificParam(env, 's3-bucket'),
     );
-
-    // Create dummy authentication secret for Girl Scouts OCR POC
-    this.dummyAuthSecret = this.createDummyAuthSecret(env);
 
     new cdk.CfnOutput(this, 'InfrastructureStackNote', {
       value: 'Core infrastructure for Girl Scouts OCR POC - S3 buckets and Cognito authentication',
@@ -77,26 +71,5 @@ export class InfrastructureStack extends cdk.Stack {
       console.warn(`Could not read config value '${key}':`, (error as Error).message);
       return undefined;
     }
-  }
-
-  private createDummyAuthSecret(env: string): secretsmanager.Secret {
-    const dummyAuthSecret = new secretsmanager.Secret(this, 'DummyAuthSecret', {
-      secretName: 'third-party/its-api/auth-key',
-      description: 'Dummy authentication credentials for development and testing',
-      secretStringValue: cdk.SecretValue.unsafePlainText(JSON.stringify({
-        auth_key: 'C68AA04D162E40668FC32D83AA2367E2'
-      })),
-      removalPolicy: env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
-    });
-
-    // Output the secret ARN for reference
-    new cdk.CfnOutput(this, 'DummyAuthSecretArnOutput', {
-      key: envSpecificParam(env, 'PCPDummyAuthSecretArn', ''),
-      exportName: envSpecificParam(env, 'PCPDummyAuthSecretArn', ''),
-      value: dummyAuthSecret.secretArn,
-      description: 'ARN of the dummy authentication secret',
-    });
-
-    return dummyAuthSecret;
   }
 }

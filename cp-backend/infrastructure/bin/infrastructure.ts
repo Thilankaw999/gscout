@@ -52,6 +52,8 @@ const infrastructureStack = new InfrastructureStack(app, `${projectName}-${env}-
 const ocrStack = new GirlScoutsOcrStack(app, `${projectName}-${env}-ocr-stack`, {
   ...stackProps,
   description: `${projectName} OCR Processing Stack - OCR and document processing resources for ${env} environment`,
+  stage: env,
+  region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
 });
 
 // Add explicit dependencies

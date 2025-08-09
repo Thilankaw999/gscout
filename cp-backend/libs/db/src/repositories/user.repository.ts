@@ -45,12 +45,4 @@ export class UserRepository extends BaseRepository<
       ),
     );
   }
-
-  async findByCity(city: string): Promise<User[]> {
-    return await this.findMany(eq(this.table.addressCity, city));
-  }
-
-  async findByState(state: string): Promise<User[]> {
-    return await this.findMany(eq(this.table.addressState, state));
-  }
 }

@@ -2,8 +2,8 @@
  * Author: Assistant
  * Created on: 2024-12-21
  * Description: MySQL RDS Construct
- * Module: Infrastructure
- * Copyright (c) 2024 All rights reserved.
+ * Module: Girl Scouts OCR POC Infrastructure
+ * Copyright (c) 2024 Girl Scouts All rights reserved.
  */
 
 import * as cdk from 'aws-cdk-lib';
@@ -41,10 +41,10 @@ export class RdsConstruct extends Construct {
     // Create a security group for the RDS instance
     this.dbSecurityGroup = new ec2.SecurityGroup(
       this,
-      'PCPApiRdsSecurityGroup',
+      'GirlScoutsRdsSecurityGroup',
       {
         vpc: this.vpc,
-        description: 'Security group for MySQL RDS instance',
+        description: 'Security group for Girl Scouts OCR MySQL RDS instance',
         allowAllOutbound: true,
       },
     );
@@ -52,10 +52,10 @@ export class RdsConstruct extends Construct {
     // Create a security group for Lambda functions to access RDS
     this.lambdaSecurityGroup = new ec2.SecurityGroup(
       this,
-      'PCPApiLambdaRdsSecurityGroup',
+      'GirlScoutsLambdaRdsSecurityGroup',
       {
         vpc: this.vpc,
-        description: 'PCPApi Security group for Lambda functions to access RDS',
+        description: 'Girl Scouts OCR Security group for Lambda functions to access RDS',
         allowAllOutbound: true,
       },
     );
@@ -64,23 +64,23 @@ export class RdsConstruct extends Construct {
     this.dbSecurityGroup.addIngressRule(
       this.lambdaSecurityGroup,
       ec2.Port.tcp(3306),
-      'PCPApi Allow Lambda functions to access MySQL',
+      'Girl Scouts OCR Allow Lambda functions to access MySQL',
     );
 
     // Allow public access for development/debugging (remove in production)
     this.dbSecurityGroup.addIngressRule(
       ec2.Peer.anyIpv4(),
       ec2.Port.tcp(3306),
-      'PCPApi Allow public access for development',
+      'Girl Scouts OCR Allow public access for development',
     );
 
     // Create a secret for database credentials
-    this.dbSecret = new secretsmanager.Secret(this, 'PCPApiRdsSecret', {
-      secretName: envSpecificParam(env, 'pcp-api-db-secret'),
-      description: 'PCP API MySQL database credentials',
+    this.dbSecret = new secretsmanager.Secret(this, 'GirlScoutsRdsSecret', {
+      secretName: envSpecificParam(env, 'girl-scouts-ocr-db-secret'),
+      description: 'Girl Scouts OCR MySQL database credentials',
       generateSecretString: {
         secretStringTemplate: JSON.stringify({
-          username: 'pcp_api_admin',
+          username: 'girl_scouts_admin',
         }),
         generateStringKey: 'password',
         excludeCharacters: '"@/\\',
@@ -89,7 +89,7 @@ export class RdsConstruct extends Construct {
     });
 
     // Create the MySQL RDS instance
-    this.dbInstance = new rds.DatabaseInstance(this, 'PCPApiDBInstance', {
+    this.dbInstance = new rds.DatabaseInstance(this, 'GirlScoutsDBInstance', {
       engine: rds.DatabaseInstanceEngine.mysql({
         version: rds.MysqlEngineVersion.VER_8_0,
       }),
@@ -103,8 +103,8 @@ export class RdsConstruct extends Construct {
       },
       securityGroups: [this.dbSecurityGroup],
       credentials: rds.Credentials.fromSecret(this.dbSecret),
-      databaseName: `pcp_api_db_${env}`, // Valid database name: starts with letter, alphanumeric only
-      instanceIdentifier: envSpecificParam(env, 'pcp-api-db'),
+      databaseName: `girl_scouts_ocr_db_${env}`, // Valid database name: starts with letter, alphanumeric only
+      instanceIdentifier: envSpecificParam(env, 'girl-scouts-ocr-db'),
 
       // Storage configuration
       storageType: rds.StorageType.GP2,
@@ -129,33 +129,33 @@ export class RdsConstruct extends Construct {
     this.dbPort = 3306;
 
     // CloudFormation outputs
-    new cdk.CfnOutput(this, 'PCPApiRdsEndpointOutput', {
-      key: envSpecificParam(env, 'PCPApiDBEndpoint', ''),
-      exportName: envSpecificParam(env, 'PCPApiDBEndpoint', ''),
+    new cdk.CfnOutput(this, 'GirlScoutsRdsEndpointOutput', {
+      key: envSpecificParam(env, 'GirlScoutsDBEndpoint', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsDBEndpoint', ''),
       value: this.dbEndpoint,
     });
 
-    new cdk.CfnOutput(this, 'PCPApiRdsPortOutput', {
-      key: envSpecificParam(env, 'PCPApiDBPort', ''),
-      exportName: envSpecificParam(env, 'PCPApiDBPort', ''),
+    new cdk.CfnOutput(this, 'GirlScoutsRdsPortOutput', {
+      key: envSpecificParam(env, 'GirlScoutsDBPort', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsDBPort', ''),
       value: this.dbPort.toString(),
     });
 
-    new cdk.CfnOutput(this, 'PCPApiRdsSecurityGroupOutput', {
-      key: envSpecificParam(env, 'PCPApiDBSecurityGroup', ''),
-      exportName: envSpecificParam(env, 'PCPApiDBSecurityGroup', ''),
+    new cdk.CfnOutput(this, 'GirlScoutsRdsSecurityGroupOutput', {
+      key: envSpecificParam(env, 'GirlScoutsDBSecurityGroup', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsDBSecurityGroup', ''),
       value: this.dbSecurityGroup.securityGroupId,
     });
 
-    new cdk.CfnOutput(this, 'PCPApiLambdaSecurityGroupOutput', {
-      key: envSpecificParam(env, 'PCPApiLambdaRdsSecurityGroup', ''),
-      exportName: envSpecificParam(env, 'PCPApiLambdaRdsSecurityGroup', ''),
+    new cdk.CfnOutput(this, 'GirlScoutsLambdaSecurityGroupOutput', {
+      key: envSpecificParam(env, 'GirlScoutsLambdaRdsSecurityGroup', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsLambdaRdsSecurityGroup', ''),
       value: this.lambdaSecurityGroup.securityGroupId,
     });
 
-    new cdk.CfnOutput(this, 'PCPApiRdsSecretArnOutput', {
-      key: envSpecificParam(env, 'PCPApiDBSecretArn', ''),
-      exportName: envSpecificParam(env, 'PCPApiDBSecretArn', ''),
+    new cdk.CfnOutput(this, 'GirlScoutsRdsSecretArnOutput', {
+      key: envSpecificParam(env, 'GirlScoutsDBSecretArn', ''),
+      exportName: envSpecificParam(env, 'GirlScoutsDBSecretArn', ''),
       value: this.dbSecret.secretArn,
     });
   }

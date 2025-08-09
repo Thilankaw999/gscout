@@ -1,22 +1,4 @@
 /**
- * Author: Roshan Piumal (roshan.piumal@mitrai.com)
- * Created on: 10-09-2024
- * Description: CustomerProfile Schema using Drizzle ORM
- * Module: LiPMPS Backend
- * Copyright (c) 2024 MitraAi All rights reserved.
- */
-
-import {
-  mysqlTable,
-  int,
-  varchar,
-  text,
-  index,
-  uniqueIndex,
-} from 'drizzle-orm/mysql-core';
-import { auditFields, WithAuditFields } from './base.schema';
-
-/**
  * Author: AI Assistant
  * Created on: 05-08-2025
  * Description: User Schema for Girl Scouts OCR POC - Simplified for admin users

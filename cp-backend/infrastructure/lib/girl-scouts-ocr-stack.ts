@@ -41,7 +41,6 @@ export class GirlScoutsOcrStack extends cdk.Stack {
       lifecycleRules: [
         {
           id: 'DeleteOldVersions',
-          deleteMarkerDeletion: true,
           noncurrentVersionExpiration: cdk.Duration.days(90),
         },
         {
@@ -193,17 +192,6 @@ export class GirlScoutsOcrStack extends cdk.Stack {
       .next(extractTfrData)
       .next(validateData)
       .next(notifyCompletion);
-
-    // Add error handling
-    extractTfrData.addCatch(handleError, {
-      errors: ['States.ALL'],
-      resultPath: '$.error',
-    });
-
-    validateData.addCatch(handleError, {
-      errors: ['States.ALL'],
-      resultPath: '$.error',
-    });
 
     return new stepfunctions.StateMachine(this, 'OcrProcessingStateMachine', {
       stateMachineName: `girl-scouts-ocr-processing-${stage}`,

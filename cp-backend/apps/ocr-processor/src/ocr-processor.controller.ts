@@ -1,13 +1,33 @@
 /**
  * Author: AI Assistant
  * Created on: 05-08-2025
- * Description: OCR Processor Controller
+ * Description: Controller to manage OCR processing operations for Girl Scouts POC
  * Module: Girl Scouts POC Backend
- * Copyright (c) 2025 Girl Scouts All rights reserved.
  */
 
-import { Controller, Post, Get, Param, Body, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  applyDecorators,
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  ParseIntPipe,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import {
+  ACTIONS,
+  CheckFeatures,
+  FeaturesGuard,
+  RESOURCES,
+} from '@app/permissions';
+import { createSwaggerResponse } from '@app/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { ExtractTfrDataUseCase } from './commands/extract-tfr-data/extract-tfr-data.usecase';
 import { ValidateTfrDataUseCase } from './commands/validate-tfr-data/validate-tfr-data.usecase';
 import { GetProcessingStatusUseCase } from './queries/get-processing-status/get-processing-status.usecase';
@@ -17,8 +37,9 @@ import { ValidateTfrDataCommand } from './commands/validate-tfr-data/validate-tf
 import { GetProcessingStatusQuery } from './queries/get-processing-status/get-processing-status.query';
 import { GetExtractionResultsQuery } from './queries/get-extraction-results/get-extraction-results.query';
 
+@Controller('ocr-processor')
 @ApiTags('OCR Processing')
-@Controller()
+@UseGuards(FeaturesGuard)
 export class OcrProcessorController {
   constructor(
     private readonly extractTfrDataUseCase: ExtractTfrDataUseCase,
@@ -28,32 +49,73 @@ export class OcrProcessorController {
   ) {}
 
   @Post('extract-tfr-data')
-  @ApiOperation({ summary: 'Extract data from TFR document using OCR' })
-  @ApiResponse({ status: 200, description: 'OCR extraction initiated successfully' })
-  async extractTfrData(@Body() command: ExtractTfrDataCommand) {
+  @CheckFeatures([RESOURCES.DOCUMENTS, ACTIONS.UPDATE])
+  @ExtractTfrDataAPIDocs()
+  async extractTfrData(
+    @Body() command: ExtractTfrDataCommand,
+    @Req() request: any,
+  ) {
     return this.extractTfrDataUseCase.execute(command);
   }
 
   @Post('validate-tfr-data')
-  @ApiOperation({ summary: 'Validate extracted TFR data' })
-  @ApiResponse({ status: 200, description: 'Data validation completed' })
-  async validateTfrData(@Body() command: ValidateTfrDataCommand) {
+  @CheckFeatures([RESOURCES.DOCUMENTS, ACTIONS.UPDATE])
+  @ValidateTfrDataAPIDocs()
+  async validateTfrData(
+    @Body() command: ValidateTfrDataCommand,
+    @Req() request: any,
+  ) {
     return this.validateTfrDataUseCase.execute(command);
   }
 
   @Get('processing-status/:documentId')
-  @ApiOperation({ summary: 'Get OCR processing status for a document' })
-  @ApiResponse({ status: 200, description: 'Processing status retrieved' })
-  async getProcessingStatus(@Param('documentId', ParseIntPipe) documentId: number) {
+  @CheckFeatures([RESOURCES.DOCUMENTS, ACTIONS.GET])
+  @GetProcessingStatusAPIDocs()
+  async getProcessingStatus(
+    @Param('documentId', ParseIntPipe) documentId: number,
+    @Req() request: any,
+  ) {
     const query = new GetProcessingStatusQuery(documentId);
     return this.getProcessingStatusUseCase.execute(query);
   }
 
   @Get('extraction-results/:documentId')
-  @ApiOperation({ summary: 'Get OCR extraction results for a document' })
-  @ApiResponse({ status: 200, description: 'Extraction results retrieved' })
-  async getExtractionResults(@Param('documentId', ParseIntPipe) documentId: number) {
+  @CheckFeatures([RESOURCES.DOCUMENTS, ACTIONS.GET])
+  @GetExtractionResultsAPIDocs()
+  async getExtractionResults(
+    @Param('documentId', ParseIntPipe) documentId: number,
+    @Req() request: any,
+  ) {
     const query = new GetExtractionResultsQuery(documentId);
     return this.getExtractionResultsUseCase.execute(query);
   }
+}
+
+// API Documentation Decorators (following user pattern)
+function ExtractTfrDataAPIDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Extract data from TFR document using OCR' }),
+    ApiResponse(createSwaggerResponse('OCR extraction initiated successfully', 200)),
+  );
+}
+
+function ValidateTfrDataAPIDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Validate extracted TFR data' }),
+    ApiResponse(createSwaggerResponse('Data validation completed', 200)),
+  );
+}
+
+function GetProcessingStatusAPIDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Get OCR processing status for a document' }),
+    ApiResponse(createSwaggerResponse('Processing status retrieved', 200)),
+  );
+}
+
+function GetExtractionResultsAPIDocs() {
+  return applyDecorators(
+    ApiOperation({ summary: 'Get OCR extraction results for a document' }),
+    ApiResponse(createSwaggerResponse('Extraction results retrieved', 200)),
+  );
 }

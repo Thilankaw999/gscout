@@ -1,0 +1,101 @@
+service: girlscouts-chatbot
+frameworkVersion: '4.x.x'
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  memorySize: 1800
+  versionFunctions: false
+  stage: ${opt:stage, "dev"}
+  region: 'ap-south-1'  # Fixed: Use ap-south-1 where you have model access
+  endpointType: ${file(${self:custom.envFilePath}):apiGatewayEndpointType}
+  deploymentBucket:
+    name: ${self:provider.environment.DEPLOYMENT_BUCKET_NAME}
+  environment: ${file(../../shared/commonEnvVars.yml):commonEnvVars}
+  # vpc:
+  #   securityGroupIds: ${file(${self:custom.envFilePath}):vpc.lambdaSecurityGroupIds}
+  #   subnetIds: ${file(${self:custom.envFilePath}):vpc.subnetIds}
+  iam:
+    role:
+      statements:
+        - ${file(../../shared/commonIAMRoleStatements.yml):firehosePutRecord}
+        - ${file(../../shared/commonIAMRoleStatements.yml):rdsAccess}
+        - ${file(../../shared/commonIAMRoleStatements.yml):secretsManager}
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+            - bedrock:InvokeModelWithResponseStream
+            - bedrock:Converse
+            - bedrock:ConverseStream
+            - bedrock:InvokeAgent  # Added for Bedrock Agent support
+          Resource: 
+            - "arn:aws:bedrock:ap-south-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0"
+            - "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0"
+            - "arn:aws:bedrock:ap-south-1:*:agent/*"  # Added for Bedrock Agent access
+            - "arn:aws:bedrock:ap-south-1:*:agent-alias/*"  # Added for Bedrock Agent alias access
+        - Effect: Allow
+          Action:
+            - bedrock:CreateKnowledgeBase
+            - bedrock:GetKnowledgeBase
+            - bedrock:ListKnowledgeBases
+            - bedrock:CreateDataSource
+            - bedrock:GetDataSource
+            - bedrock:ListDataSources
+            - bedrock:StartIngestionJob
+            - bedrock:GetIngestionJob
+            - bedrock:ListIngestionJobs
+          Resource: "*"
+
+custom:
+  envFilePath: '../../environment/env.json'
+  customDomain:
+    basePath: chatbot
+    domainName: ${file(${self:custom.envFilePath}):apiDomain}
+    certificateName: ${file(${self:custom.envFilePath}):sslCertificateName}
+    stage: ${self:provider.stage}
+  serverless-offline:
+    httpPort: 3002
+    lambdaPort: 4002
+    noPrependStageInUrl: true
+    noTimeout: true
+    verbose: true
+    prefix: 'chatbot'
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./.dist/**
+
+plugins:
+  - serverless-offline
+  - serverless-domain-manager
+
+functions:
+  chatbotApi:
+    handler: .dist/main.handler
+    events:
+      - http:
+          method: POST
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          path: /chat
+      - http:
+          method: POST
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          path: /start-session
+      - http:
+          method: GET
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          path: /session/{sessionId}/status
+      - http:
+          method: GET
+          cors:
+            origin: '*'
+            headers: ${file(../../shared/slsConfig.yml):allowedCorsHeaders}
+          path: /docs/swagger.json
