@@ -12,6 +12,7 @@ import * as cdk from 'aws-cdk-lib';
 import { InfrastructureStack } from '../lib/infrastructure';
 import { DatabaseStack } from '../lib/database-stack';
 import { GirlScoutsOcrStack } from '../lib/girl-scouts-ocr-stack';
+import { BedrockAgentStack } from '../lib/bedrock-agent-stack';
 
 const app = new cdk.App();
 
@@ -56,12 +57,24 @@ const ocrStack = new GirlScoutsOcrStack(app, `${projectName}-${env}-ocr-stack`, 
   region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
 });
 
+// 4. Deploy Bedrock Agent Stack (AI chatbot resources)
+const bedrockAgentStack = new BedrockAgentStack(app, `${projectName}-${env}-bedrock-agent-stack`, {
+  ...stackProps,
+  description: `${projectName} Bedrock Agent Stack - AI chatbot and form processing resources for ${env} environment`,
+  stage: env,
+  foundationModel: 'apac.anthropic.claude-3-5-sonnet-20240620-v1:0',
+  idleSessionTimeout: 600,
+});
+
 // Add explicit dependencies
 infrastructureStack.addDependency(databaseStack);
 ocrStack.addDependency(infrastructureStack);
+// bedrockAgentStack.addDependency(infrastructureStack); // Removed dependency to make it standalone
 
 // Output deployment order information
 console.log(`\n🗄️  Database Stack: ${databaseStack.stackName}`);
 console.log(`🏗️  Infrastructure Stack: ${infrastructureStack.stackName}`);
 console.log(`📄  OCR Processing Stack: ${ocrStack.stackName}`);
-console.log(`\nℹ️  Deploy order: Database → Infrastructure → OCR Processing\n`);
+console.log(`🤖  Bedrock Agent Stack: ${bedrockAgentStack.stackName} (standalone)`);
+console.log(`\nℹ️  Deploy order: Database → Infrastructure → OCR Processing`);
+console.log(`ℹ️  Bedrock Agent Stack can be deployed independently\n`);

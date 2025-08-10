@@ -139,6 +139,40 @@ export class ChatbotController {
     return this.getSessionStatusUseCase.execute(sessionId);
   }
 
+  @Get('/session/:sessionId/submission-status')
+  @ApiOperation({
+    summary: 'Get form submission status',
+    description: 'Check if the form has been submitted for a completed session',
+  })
+  @ApiParam({
+    name: 'sessionId',
+    description: 'The session ID to check submission status for',
+    example: 'gs_1625123456789_abc123def',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Submission status retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        isSubmitted: { type: 'boolean', example: true },
+        submissionId: { type: 'string', example: 'gs_sub_1625123456789_def456abc' },
+        timestamp: { type: 'string', example: '2025-08-09T10:30:00.000Z' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Session not found',
+  })
+  async getSubmissionStatus(@Param('sessionId') sessionId: string) {
+    return this.getSessionStatusUseCase.execute(sessionId).then(status => ({
+      isSubmitted: !!status.submissionId,
+      submissionId: status.submissionId,
+      timestamp: new Date().toISOString(),
+    }));
+  }
+
   @Get('/health')
   @ApiOperation({
     summary: 'Health check endpoint',

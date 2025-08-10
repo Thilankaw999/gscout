@@ -40,6 +40,7 @@ export class GetSessionStatusUseCase extends UseCase<string, SessionStatusDto> {
         isCompleted: conversation.isCompleted,
         status: conversation.status,
         formData: conversation.isCompleted ? conversation.formData : undefined,
+        submissionId: conversation.submissionId, // Include submission ID if available
       };
 
       this.logger.debug('GetSessionStatusUseCase: Session status retrieved', {

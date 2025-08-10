@@ -47,6 +47,9 @@ export class ChatResponseDto {
 
   @ApiProperty({ description: 'Bedrock Agent session ID for continuity', required: false })
   agentSessionId?: string;
+
+  @ApiProperty({ description: 'Form submission ID if form is completed and submitted', required: false })
+  submissionId?: string;
 }
 
 export class StartSessionDto {
@@ -90,6 +93,9 @@ export class SessionStatusDto {
 
   @ApiProperty({ description: 'Collected form data', required: false })
   formData?: Record<string, any>;
+
+  @ApiProperty({ description: 'Form submission ID if submitted', required: false })
+  submissionId?: string;
 }
 
 export class FormDataDto {

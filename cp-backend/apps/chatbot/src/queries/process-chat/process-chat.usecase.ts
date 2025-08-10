@@ -10,14 +10,12 @@ import { Injectable, Scope, NotFoundException } from '@nestjs/common';
 import { UseCase } from '@app/common';
 import { Logger } from '@app/logger';
 import { ConversationService } from '../../services/conversation.service';
-import { FormSubmissionService } from '../../services/form-submission.service';
 import { ChatMessageDto, ChatResponseDto, ConversationStatus } from '../../dto/chatbot.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProcessChatUseCase extends UseCase<ChatMessageDto, ChatResponseDto> {
   constructor(
     private readonly conversationService: ConversationService,
-    private readonly formSubmissionService: FormSubmissionService,
     private readonly logger: Logger,
   ) {
     super();
@@ -48,28 +46,24 @@ export class ProcessChatUseCase extends UseCase<ChatMessageDto, ChatResponseDto>
         }
       }
 
-      // Process the message using Bedrock Agent (which handles conversation memory)
+      // Process the message using Bedrock Agent (which handles conversation memory and form submission)
       const result = await this.conversationService.processMessage(sessionId, dto.message);
-      
-      // Check if form is completed and submit if necessary
-      let submissionMessage = '';
-      if (result.conversation.isCompleted && result.conversation.status === ConversationStatus.COMPLETED) {
-        submissionMessage = await this.handleFormSubmission(sessionId, result.conversation.formData);
-      }
 
       // Prepare response
       const response: ChatResponseDto = {
-        response: submissionMessage ? `${result.response}\n\n${submissionMessage}` : result.response,
+        response: result.response,
         sessionId: sessionId, // Use the actual sessionId (either provided or created)
         isCompleted: result.conversation.isCompleted,
         status: result.conversation.status,
         agentSessionId: result.conversation.agentSessionId,
+        submissionId: result.conversation.submissionId, // Include submission ID if form was submitted
       };
 
       this.logger.info('ProcessChatUseCase: Chat message processed successfully', {
         sessionId: sessionId,
         isCompleted: result.conversation.isCompleted,
         agentSessionId: result.conversation.agentSessionId,
+        submissionId: result.conversation.submissionId,
       });
 
       return response;
@@ -81,55 +75,5 @@ export class ProcessChatUseCase extends UseCase<ChatMessageDto, ChatResponseDto>
       });
       throw error;
     }
-  }
-
-  /**
-   * Handle form submission when conversation is completed
-   */
-  private async handleFormSubmission(sessionId: string, formData: any): Promise<string> {
-    try {
-      this.logger.debug('ProcessChatUseCase: Submitting completed form', {
-        sessionId,
-      });
-
-      const submissionResult = await this.formSubmissionService.submitFormData(
-        sessionId,
-        formData,
-        'girl_scouts_application'
-      );
-
-      if (submissionResult.success) {
-        return `🎉 Great news! Your application has been submitted successfully! Your submission ID is: ${submissionResult.submissionId}. Someone from our team will contact you soon at the email and phone number you provided.`;
-      } else {
-        return `⚠️ There was an issue submitting your application: ${submissionResult.message}. Please contact our support team for assistance.`;
-      }
-
-    } catch (error) {
-      this.logger.error('ProcessChatUseCase: Form submission failed', {
-        sessionId,
-        error: error.message,
-      });
-
-      return `⚠️ We encountered a technical issue while submitting your application. Please contact our support team with your session ID: ${sessionId}`;
-    }
-  }
-
-  /**
-   * Provide hint about expected input for current question
-   */
-  private getExpectedInputHint(currentQuestion: number, isCompleted: boolean): string | undefined {
-    if (isCompleted) {
-      return undefined;
-    }
-
-    const hints = [
-      'Please enter your full name',
-      'Please enter a valid email address',
-      'Please enter your phone number',
-      'Please enter your age (5-18)',
-      'Choose from: outdoor adventures, community service, STEM projects, arts & crafts, or leadership development'
-    ];
-
-    return hints[currentQuestion - 1];
   }
 }

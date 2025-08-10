@@ -1,0 +1,2 @@
+# No additional dependencies required for basic boto3 and json operations
+# boto3 is included by default in AWS Lambda Python runtime
